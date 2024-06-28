@@ -2,6 +2,8 @@
 #This may later be expanded to connect to a SQL database to engage directly with the job application tracker. 
 import os
 
+programDirectory: os.path.dirname(os.path.realpath(__file__))  
+
 date = input("When did you apply? \n")
 jobTitle = input("\nWhat's the job title?\n")
 skillOfMerit = input("\nAs a mathematician, I carry an understanding of _________ that uniquely positions me to thrive...\n")
@@ -45,6 +47,7 @@ while(True):
            6 - Company Value (drawn to {companyName} because of your...)
            7 - Personal Title (tail of email signature)
           """)
+    
     if userChoice == "":
         break;
     elif userChoice == 1:
@@ -61,3 +64,15 @@ while(True):
         companyValue = input("\nWhy do you want to work at this specific company?\n")
     elif userChoice == 7:
         personalTitle = input("\nWhat title do you want to present yourself with?\n")
+
+folderName = "Letter_Archive"
+if not os.path.exists(folderName):
+    os.makedirs(folderName)
+
+os.chdir(programDirectory + f"\\{folderName}")
+
+with open(f"Reply - {jobTitle} - {companyName}", "w") as file:
+    file.write(messageBody)
+
+pyperclip.copy(messageBody)
+os.chdir(programDirectory)
