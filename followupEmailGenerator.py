@@ -6,8 +6,8 @@ programDirectory: os.path.dirname(os.path.realpath(__file__))
 
 date = input("When did you apply? \n")
 jobTitle = input("\nWhat's the job title?\n")
-skillOfMerit = input("\nAs a mathematician, I carry an understanding of _________ that uniquely positions me to thrive...\n")
-jobIndustry = input(f"\nI carry an understanding of {skillOfMerit} that uniquely positions me to thrive in the ________\n")
+skillOfMerit = input("\nAs a mathematician, I carry [an understanding of _________] that uniquely positions me to thrive...\n")
+jobIndustry = input(f"\nI carry {skillOfMerit} that uniquely positions me to [thrive in the ________ industry]\n")
 companyName = input("\nWhat is the company name?\n")
 companyValue = input("\nWhy do you want to work at this specific company?\n")
 personalTitle = input("\nWhat title do you want to present yourself with?\n")
@@ -17,7 +17,7 @@ messageBody = f"""Hi,
    
 I sent in an application on {date} for the advertised role of {jobTitle} .  I wanted to ask if you have you had time to review my resume and qualifications, as well as inquire into the status of the hiring process.  
 
-My combination of experience, skill, and genuine enthusiasm for the position make me a strong candidate. As a mathematician, I carry an understanding of {skillOfMerit} that uniquely positions me to thrive in the {jobIndustry}.  
+My combination of experience, skill, and genuine enthusiasm for the position make me a strong candidate. As a mathematician, I carry {skillOfMerit} that uniquely positions me to {jobIndustry}.  
 
 Drawn to {companyName} because of your {companyValue}, I wanted to re-express my interest in joining your team.   I appreciate any information you are able to provide, and cordially state my availability for an interview.  
 
@@ -41,7 +41,7 @@ while(True):
 
            1 - date
            2 - Target job title 
-           3 - Skill of merit (I carry an understanding of...)
+           3 - Skill of merit (I carry [an ability to...])
            4 - Industry (thrive in ...)
            5 - Company Name
            6 - Company Value (drawn to {companyName} because of your...)
