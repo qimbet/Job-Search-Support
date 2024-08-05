@@ -5,6 +5,22 @@
 
 import pdfkit
 import sqlite3
+import os
+
+#----------------------------------------------------------------------------------------------
+#
+#           DIRECTORY MANAGEMENT
+#
+#----------------------------------------------------------------------------------------------
+
+path_to_wkhtmltopdf = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+config = pdfkit.configuration(wkhtmltopdf = path_to_wkhtmltopdf)
+
+programDirectory = os.path.dirname(os.path.realpath(__file__))
+
+folderName = "Cover Letter Archive"
+if not os.path.exists(folderName):
+    os.makedirs(folderName)
 
 #----------------------------------------------------------------------------------------------
 #
@@ -57,21 +73,71 @@ def lookup(table, searchText):  #returns the primary key associated with the sea
         print("Caution! Duplicate entries -- the lookup returned more than one primary key for the search")
         return int(results[0]) #returns the primary key of the first viable entry
     
-def add(table, valuesToAdd, valuesCategories):
-    numVals =  len(valuesToAdd)
-    qMarkBitstring = "?,"
-    qMarks = ""
+def matchValues(table, key, seekList):
+    #seekList is a boolean list, denoting whether a given value is sought
+    #e.g. companyName=False, companyAddres = True, companyPhone = False; --> [FALSE, TRUE, FALSE, ...]
 
-    for elements in numVals:
-        qMarks += qMarkBitstring
-    qMarks = qMarks[:-1] #removes the last character (i.e. the trailing comma)
+    cursor.execute(f"PRAGMA table_info({table})")
+
+
+#################I suspect this could be done more efficiently. Double-check this function. Not finished yet. 
+
+
+        # #PRAGMA table_info returns: 
+        # Column id         INT     #starts at 0
+        # Column name       STR 
+        # Data Type         STR
+        # notNull (whether value can be null) BOOL/INT
+        # Default Value     STR
+        # Primary Key       BOOL/INT
+    columnAllData = cursor.fetchall()
     
-    cursor.execute(f"""
-        INSERT INTO wardenRecords (identifier, originalFileLocation, originalFileName, releaseDate)
-        VALUES {qMarks} 
-    """,(identifier, originalFileDirectory, fileName, calculateRelease(jailTimeWeeks),)) 
+    count = 0
+    columnNames = []
+    for element in columnAllData:
+        columnNames[count] = element[1] #returns the column names of the table. 
+        count += 1
+
+    count = 0
+    columnHeader = []
+    for element in columnNames:
+
+        columnHeader[count] = element
+        count +=1
+
+
     
-    cursor.execute(command, (searchText,))
+    for element in seekList:
+        if (element == True):
+            cursor.execute(f"SELECT {lookupValues} FROM {table}")
+            returnList = cursor.fetchall()
+    
+    return returnList
+
+    
+def allRowValues(table, key):
+    cursor.execute(f"SELECT * from {table} where identifier = ?", (key,))
+    results = cursor.fetchall()
+    return results
+    
+def add(table, valuesToAdd, valuesCategories):
+    #we expect valuesToAdd, valuesCategories to be lists of matched values/categories
+    
+    stringToAdd = ""
+    for element in valuesToAdd:
+        stringToAdd += "f{element}, "
+    stringToAdd = stringToAdd[:-2] #removes trailing comma, whitespace
+
+    stringCategories = ""
+    for element in valuesCategories:
+        stringCategories += "f{element}, "
+    stringCategories = stringCategories[:-2] #removes trailing comma, whitespace
+
+    for entry in range(len(valuesToAdd)):
+        SQLcommand = f"INSERT INTO {table} {stringCategories[entry]} VALUES (?)"    
+        cursor.execute(SQLcommand, (stringToAdd[entry],))
+    
+    conn.commit()
 
 #----------------------------------------------------------------------------------------------
 #
@@ -93,17 +159,15 @@ industry = "healthcare"
 personalCommitment = "improving patient outcomes"
 
 role = "Data Analyst"
-leadSource = ""
+leadSource = "" #where was the posting found?
 
-
-# cursor.execute(f"""INSERT INTO text_storage (identifier, text_content) 
-#                VALUES ({}, 'Sample text 1');
-# """)
+font = "Roboto"
+accentColour = "#00786c"
 
 
 #----------------------------------------------------------------------------------------------
 #
-#           F-STRINGS
+#           COVER LETTER TEXT BLOCKS
 #
 #----------------------------------------------------------------------------------------------
 
@@ -169,6 +233,7 @@ signature = f"""Best,
 """
 # SIGNATURE: 10-20 words
 
+#removes formatting -- linebreaks added for readability in the IDE
 introduction.replace("\n", " ")
 para1.replace("\n", " ")
 para2.replace("\n", " ")
@@ -179,10 +244,6 @@ para3.replace("\n", " ")
 #          CSS FORMATTING
 #
 #----------------------------------------------------------------------------------------------
-
-font = "Roboto"
-accentColour = "#00786c"
-
 
 cssPortion = f"""
 <!DOCTYPE html>
@@ -293,8 +354,22 @@ HTMLPortion = f"""</head>
 #
 #---------------------------------------------------------------------------------------------- 
 
-path_to_wkhtmltopdf = "C:\Program Files\wkhtmltopdf\bin" 
-config = pdfkit.configuration(wkhtmltopdf=path_to_wkhtmltopdf)
+
 
 # Example of generating a PDF
-pdfkit.from_string(cssPortion + HTMLPortion, f"{name} - Cover Letter for {companyName} - {role}.pdf", configuration=config)
+
+endFileContent = cssPortion + HTMLPortion
+print("Pdf prepared. generating:    ")
+
+os.chdir(programDirectory + f"\\{folderName}")
+pdfkit.from_string(endFileContent, f"{name} - Cover Letter for {companyName} - {role}.pdf", configuration=config)
+
+
+#----------------------------------------------------------------------------------------------
+#
+#           HOUSEKEEPING
+#
+#---------------------------------------------------------------------------------------------- 
+conn.close()
+os.chdir(programDirectory)
+print(f"Cover letter generated for {companyName}")
