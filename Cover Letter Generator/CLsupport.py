@@ -74,16 +74,11 @@ def lookup(table, searchText):  #returns the primary key associated with the sea
         return int(results[0]) #returns the primary key of the first viable entry
     
 def matchValues(table, key, seekList):
-    #seekList is a boolean list, denoting whether a given value is sought
+    #seekList is a binary list (1 = true, 0 = false), denoting whether a given value is sought
     #e.g. companyName=False, companyAddres = True, companyPhone = False; --> [FALSE, TRUE, FALSE, ...]
 
     cursor.execute(f"PRAGMA table_info({table})")
-
-
-#################I suspect this could be done more efficiently. Double-check this function. Not finished yet. 
-
-
-        # #PRAGMA table_info returns: 
+        # #PRAGMA table_info returns a list of tuples, one for each column. Each tuple of the form: 
         # Column id         INT     #starts at 0
         # Column name       STR 
         # Data Type         STR
@@ -97,20 +92,15 @@ def matchValues(table, key, seekList):
     for element in columnAllData:
         columnNames[count] = element[1] #returns the column names of the table. 
         count += 1
-
-    count = 0
-    columnHeader = []
-    for element in columnNames:
-
-        columnHeader[count] = element
-        count +=1
-
-
     
+    count = 0
+    returnList = []
     for element in seekList:
-        if (element == True):
-            cursor.execute(f"SELECT {lookupValues} FROM {table}")
-            returnList = cursor.fetchall()
+        if (element == 1):
+            cursor.execute(f"SELECT {columnNames[count]} FROM {table} WHERE identifier = ?", (key,))
+            returnValue = cursor.fetchall()
+        returnList.append(returnValue)
+        count += 1
     
     return returnList
 
@@ -253,7 +243,8 @@ cssPortion = f"""
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jacob Mattie - Cover Letter - {role}</title>
     <style>
-
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+    
         """ + """body {
             font-family: {font}, sans-serif;
             margin: 0;
@@ -370,6 +361,8 @@ pdfkit.from_string(endFileContent, f"{name} - Cover Letter for {companyName} - {
 #           HOUSEKEEPING
 #
 #---------------------------------------------------------------------------------------------- 
+print(cssPortion)
+
 conn.close()
 os.chdir(programDirectory)
 print(f"Cover letter generated for {companyName}")
