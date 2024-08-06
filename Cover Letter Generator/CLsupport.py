@@ -49,7 +49,8 @@ cursor.execute("""CREATE TABLE if NOT EXISTS CompanyData(
             companyAddress TEXT, 
             companyPhone TEXT, 
             hiringManager TEXT, 
-            
+            industry TEXT,
+               
             PRIMARY KEY(identifier))""")
 
 conn.commit()   #use this line whenever the table is updated
@@ -59,6 +60,8 @@ conn.commit()   #use this line whenever the table is updated
 #           FUNCTION DEFINITIONS
 #
 #----------------------------------------------------------------------------------------------
+
+#   --- --- ---  SQL --- --- ---
 
 def lookup(table, searchText):  #returns the primary key associated with the searchText value
     query = f"""SELECT identifier
@@ -73,7 +76,7 @@ def lookup(table, searchText):  #returns the primary key associated with the sea
         print("Caution! Duplicate entries -- the lookup returned more than one primary key for the search")
         return int(results[0]) #returns the primary key of the first viable entry
     
-def matchValues(table, key, seekList):
+def matchValues(table, key, seekList): #returns all values matching a given key, in the binary-bool list defined by seekList
     #seekList is a binary list (1 = true, 0 = false), denoting whether a given value is sought
     #e.g. companyName=False, companyAddres = True, companyPhone = False; --> [FALSE, TRUE, FALSE, ...]
 
@@ -103,15 +106,14 @@ def matchValues(table, key, seekList):
         count += 1
     
     return returnList
-
     
-def allRowValues(table, key):
+def allRowValues(table, key): #returns all table values matching a given key
     cursor.execute(f"SELECT * from {table} where identifier = ?", (key,))
     results = cursor.fetchall()
     return results
     
-def add(table, valuesToAdd, valuesCategories):
-    #we expect valuesToAdd, valuesCategories to be lists of matched values/categories
+def add(table, valuesToAdd, valuesCategories): #adds values to a table. Inputs must be formatted as lists of strings
+    #we expect valuesToAdd, valuesCategories to be lists of matched values/categories, all in string format
     
     stringToAdd = ""
     for element in valuesToAdd:
@@ -129,6 +131,10 @@ def add(table, valuesToAdd, valuesCategories):
     
     conn.commit()
 
+#   --- --- ---  USER INTERFACE --- --- ---
+
+def 
+
 #----------------------------------------------------------------------------------------------
 #
 #           TEXT VARIABLES
@@ -145,12 +151,15 @@ companyAddress = ""
 companyPhone = ""
 hiringManager = "Hiring Manager(s)"
 
+#posting-specific
 industry = "healthcare"
 personalCommitment = "improving patient outcomes"
 
+#floating texts
 role = "Data Analyst"
 leadSource = "" #where was the posting found?
 
+#CSS formatting
 font = "Roboto"
 accentColour = "#00786c"
 

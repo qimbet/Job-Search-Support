@@ -1,0 +1,33 @@
+how should the code work?
+
+greet the user.
+press enter to build from a previous cover letter
+otherwise, enter the name of the company
+
+enter the street address of the company
+enter the city of the company (1-Vancouver, 2 - Burnaby, etc., 3-custom)
+enter the phone of the company
+enter the hiring manager if known, otherwise leave blank
+
+enter the industry
+	this comes with the personal commitment of: 
+	press enter to confirm, or type one out: 
+		you entered "". Press enter to confirm, or type one out
+
+enter the name of the role
+enter where the advertisement was found. If none, leave blank --- (redundant?)
+
+-------- data gathered --------
+Thank you!
+
+begin cover letter: 
+
+FOR ALL COVER LETTER PORTIONS:
+~Print introduction metafunction summary
+~print available introductions: 
+enter a number to select between introductions, or type one out
+	you entered "". Press enter to confirm, or retype
+		if new header, add to database
+
+
+
