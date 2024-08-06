@@ -6,6 +6,8 @@
 import pdfkit
 import sqlite3
 import os
+import tkinter as tk
+import textEditor
 
 #----------------------------------------------------------------------------------------------
 #
@@ -131,9 +133,16 @@ def add(table, valuesToAdd, valuesCategories): #adds values to a table. Inputs m
     
     conn.commit()
 
-#   --- --- ---  USER INTERFACE --- --- ---
+#   --- --- ---  TEXT HANDLING --- --- ---
 
-def 
+def newEntry(table):
+    root = tk.Tk()
+    editor = TextEditor(root)
+    root.mainloop()
+    windowText = editor.get_current_text()
+    self.root.quit()
+    print("window text is: " + windowText)
+    x = input("press enter to continue")
 
 #----------------------------------------------------------------------------------------------
 #
