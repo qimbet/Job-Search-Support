@@ -7,7 +7,6 @@ import pdfkit
 import sqlite3
 import os
 import textEditor as te
-import pyautogui as pa
 
 #----------------------------------------------------------------------------------------------
 #
@@ -53,10 +52,21 @@ cursor.execute("""CREATE TABLE if NOT EXISTS CompanyData(
             companyPhone TEXT, 
             hiringManager TEXT, 
             industry TEXT,
-               
+            PRIMARY KEY(identifier))""")
+
+cursor.execute("""CREATE TABLE if NOT EXISTS personalInfo(
+            identifier INT, 
+            name TEXT,
+            Address TEXT, 
+            city TEXT,
+            postal code TEXT,
+            phone TEXT, 
+            email TEXT,
+            website TEXT,
             PRIMARY KEY(identifier))""")
 
 conn.commit()   #use this line whenever the table is updated
+
 
 #----------------------------------------------------------------------------------------------
 #
@@ -64,12 +74,18 @@ conn.commit()   #use this line whenever the table is updated
 #
 #----------------------------------------------------------------------------------------------
 
+#   --- --- ---  DEBUGGING --- --- ---
+
+def d(input):   #debug message if DEBUG_FLAG = 1
+    if(DEBUG_FLAG == 1):
+        print(input)
+
 #   --- --- ---  SQL --- --- ---
 
-def lookup(table, searchText):  #returns the primary key associated with the searchText value
+def lookup(table, searchText):  #returns the primary key associated with the searchText value. Should this be updated to refine by column?
     query = f"""SELECT identifier
         FROM {table}
-        WHERE text_content = ?"""
+        WHERE text_content = ?""" 
     
     cursor.execute(query, (searchText,))
     results = cursor.fetchall()
@@ -115,39 +131,61 @@ def allRowValues(table, key): #returns all table values matching a given key
     results = cursor.fetchall()
     return results
     
-def add(table, valuesToAdd, valuesCategories): #adds values to a table. Inputs must be formatted as lists of strings
-    #we expect valuesToAdd, valuesCategories to be lists of matched values/categories, all in string format
+def add(table, valuesToAdd, valuesCategories): #adds values to a table. Inputs must be either matched lists, or strings
     
-    stringToAdd = ""
-    for element in valuesToAdd:
-        stringToAdd += "f{element}, "
-    stringToAdd = stringToAdd[:-2] #removes trailing comma, whitespace
+    if (type(valuesToAdd) = list):
+        stringToAdd = ""
+        for element in valuesToAdd:
+            stringToAdd += "f{element}, "
+        stringToAdd = stringToAdd[:-2] #removes trailing comma, whitespace
 
-    stringCategories = ""
-    for element in valuesCategories:
-        stringCategories += "f{element}, "
-    stringCategories = stringCategories[:-2] #removes trailing comma, whitespace
+        stringCategories = ""
+        for element in valuesCategories:
+            stringCategories += "f{element}, "
+        stringCategories = stringCategories[:-2] #removes trailing comma, whitespace
+    
+        for entry in range(len(valuesToAdd)):
+            SQLcommand = f"INSERT INTO {table} {stringCategories[entry]} VALUES (?)"    
+            cursor.execute(SQLcommand, (stringToAdd[entry],))
 
-    for entry in range(len(valuesToAdd)):
-        SQLcommand = f"INSERT INTO {table} {stringCategories[entry]} VALUES (?)"    
-        cursor.execute(SQLcommand, (stringToAdd[entry],))
+    elif (type(valuesToAdd)==str):
+        stringToAdd = valuesToAdd
+        stringCategories = valuesCategories
+
+        SQLcommand = f"INSERT INTO {table} {stringCategories} VALUES (?)"    
+        cursor.execute(SQLcommand, (stringToAdd,))       
     
     conn.commit()
 
-def d(input):   #debug message if DEBUG_FLAG = 1
-    if(DEBUG_FLAG == 1):
-        print(input)
+
 #   --- --- ---  TEXT HANDLING --- --- ---
 
-# def textEditor():
-#     editor = te.TextEditorInstance()
-#     editor.run()
-# #    windowText = editor.current_text
+def textEditor():
+    textInputWindow = te.TextEditorInstance()
+    textInputWindow.run()
+    inputText = textInputWindow.current_text
+    textInputWindow.cleanup()
+    return inputText
 
-#     #print("windowText is: " + str(windowText))
-#     #editor.cleanup()
-#     #return windowText
-#     print("end of text editor function")
+def firstTimeUse():
+    print("Welcome! Let's get you set up with some personal info. Enter these as you'd like to see them on your cover letter, or leave blank")
+    dataList = ["name", "email", "phone", "region", "postal code", "website"] 
+
+    categoryList = []
+    count = 0
+    for entry in dataList:
+        if (entry == "postal code")
+            categoryList[count] = "postalCode"  #since SQL tables behave oddly if they contain a space. This is somewhat clunky, but makes the code scaleable
+        else:
+            categoryList[count] = dataList[count]
+        count +=1
+
+    count = 0
+    for element in dataList:
+        dataList[count] = (f"Please enter your {dataList[count]}")
+        count +=1
+
+    add(personalInfo, dataList, )
 
 #----------------------------------------------------------------------------------------------
 #
@@ -155,7 +193,7 @@ def d(input):   #debug message if DEBUG_FLAG = 1
 #
 #----------------------------------------------------------------------------------------------
 
-name = "Jacob Mattie"
+name =
 email = "jacob.c.mattie@gmail.com"
 phone = "778-710-7554"
 region = "Burnaby, BC"
@@ -372,25 +410,8 @@ HTMLPortion = f"""</head>
 
 # Example of generating a PDF
 
-textInput = te.TextEditorInstance()
-textInput.run()
-d("first entry")
-x = textInput.current_text
-d("stored value is: " + x)
-textInput.cleanup()
 
-d("\n\n")
 
-textInput2 = te.TextEditorInstance()
-
-ctShTb()
-textInput2.setFocus()
-
-textInput2.run()
-d("second entry")
-y = textInput2.current_text
-d("stored value is: " + y)
-textInput2.cleanup()
 
 endFileContent = cssPortion + HTMLPortion
 print("Pdf prepared. generating:    ")
