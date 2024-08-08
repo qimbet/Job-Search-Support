@@ -12,7 +12,7 @@ enter the hiring manager if known, otherwise leave blank
 enter the industry
 	this comes with the personal commitment of: 
 	press enter to confirm, or type one out: 
-		you entered "". Press enter to confirm, or type one out
+		you entered "...". Press enter to confirm, or type one out
 
 enter the name of the role
 enter where the advertisement was found. If none, leave blank --- (redundant?)
@@ -26,7 +26,7 @@ FOR ALL COVER LETTER PORTIONS:
 ~Print introduction metafunction summary
 ~print available introductions: 
 enter a number to select between introductions, or type one out
-	you entered "". Press enter to confirm, or retype
+	you entered "...". Press enter to confirm, or retype
 		if new header, add to database
 
 

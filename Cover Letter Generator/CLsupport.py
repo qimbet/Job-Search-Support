@@ -6,14 +6,15 @@
 import pdfkit
 import sqlite3
 import os
-import tkinter as tk
-import textEditor
+import textEditor as te
+import pyautogui as pa
 
 #----------------------------------------------------------------------------------------------
 #
 #           DIRECTORY MANAGEMENT
 #
 #----------------------------------------------------------------------------------------------
+DEBUG_FLAG = 1 #Debug mode: 1 = ON, 0 = OFF
 
 path_to_wkhtmltopdf = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
 config = pdfkit.configuration(wkhtmltopdf = path_to_wkhtmltopdf)
@@ -133,16 +134,20 @@ def add(table, valuesToAdd, valuesCategories): #adds values to a table. Inputs m
     
     conn.commit()
 
+def d(input):   #debug message if DEBUG_FLAG = 1
+    if(DEBUG_FLAG == 1):
+        print(input)
 #   --- --- ---  TEXT HANDLING --- --- ---
 
-def newEntry(table):
-    root = tk.Tk()
-    editor = TextEditor(root)
-    root.mainloop()
-    windowText = editor.get_current_text()
-    self.root.quit()
-    print("window text is: " + windowText)
-    x = input("press enter to continue")
+# def textEditor():
+#     editor = te.TextEditorInstance()
+#     editor.run()
+# #    windowText = editor.current_text
+
+#     #print("windowText is: " + str(windowText))
+#     #editor.cleanup()
+#     #return windowText
+#     print("end of text editor function")
 
 #----------------------------------------------------------------------------------------------
 #
@@ -367,6 +372,26 @@ HTMLPortion = f"""</head>
 
 # Example of generating a PDF
 
+textInput = te.TextEditorInstance()
+textInput.run()
+d("first entry")
+x = textInput.current_text
+d("stored value is: " + x)
+textInput.cleanup()
+
+d("\n\n")
+
+textInput2 = te.TextEditorInstance()
+
+ctShTb()
+textInput2.setFocus()
+
+textInput2.run()
+d("second entry")
+y = textInput2.current_text
+d("stored value is: " + y)
+textInput2.cleanup()
+
 endFileContent = cssPortion + HTMLPortion
 print("Pdf prepared. generating:    ")
 
@@ -379,7 +404,6 @@ pdfkit.from_string(endFileContent, f"{name} - Cover Letter for {companyName} - {
 #           HOUSEKEEPING
 #
 #---------------------------------------------------------------------------------------------- 
-print(cssPortion)
 
 conn.close()
 os.chdir(programDirectory)
