@@ -1,2 +1,1 @@
-FakeCo.org
-muscleco.org
+Fake Company

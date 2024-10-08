@@ -1,2 +1,1 @@
-maths
-lift heavy things
+contribute value in the role of a Data Scientist

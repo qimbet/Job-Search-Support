@@ -5,6 +5,7 @@
 import os 
 import datetime as dt
 import pyperclip as pp
+import tkinter as tk
 
 debug = False
 def d(msg):
@@ -41,7 +42,7 @@ if not os.path.exists(archiveFolder):
 if not os.path.exists(dataFolder):
     os.makedirs(dataFolder)
 
-d("Made directories")
+
 
 programDirectory = os.path.dirname(os.path.realpath(__file__))  
 archiveDir = os.path.join(programDirectory, archiveFolder)
@@ -49,7 +50,6 @@ dataDir = os.path.join(programDirectory, dataFolder)
 
 d(programDirectory)
 os.chdir(dataDir)
-d("changed to dataDir")
 d(os.getcwd())
 
 for element in allFilesList:
@@ -111,7 +111,6 @@ def autofillList(prompt, madLib):
         else:
             tempList = []
             tempList.append(choice)
-            fileAppend(fileName, tempList)
             return choice
 
 def promptInputs(lst):
@@ -167,7 +166,7 @@ def messageBody():
    
 I sent in an application on {} for the advertised role of {}. I wanted to ask if you have had time to review my resume and qualifications, as well as inquire into the status of the hiring process.  
 
-My combination of experience, skill, and genuine enthusiasm for the position make me a strong candidate. As a {}, I carry {} that uniquely positions me to {}.  
+My combination of experience, skill, and genuine enthusiasm for the position make me a strong candidate. As {}, I carry {} that uniquely positions me to {}.  
 
 Drawn to {} because of your {}, I wanted to re-express my interest in joining your team. I appreciate any information you are able to provide regarding my application, and cordially state my availability for an interview.  
 
@@ -205,7 +204,7 @@ identityPrompt = "What is your academic/professional background? \nPlease includ
 identity = autofill(identityPrompt, identityFile).lower()
 
 skills = readFileList(skillsFile)
-skillPrompt = f"As {identity}, I carry [an understanding of _________] that uniquely positions me to thrive...\n ex.\n - a highly developed understanding of [x]\n- an aptitude in [y]\n"
+skillPrompt = f"As {identity}, I carry [an understanding of _________] that uniquely positions me to thrive...\n ex.\n - a highly developed understanding of [x]\n - an aptitude in [y]\n"
 skillOfMerit = autofill(skillPrompt, skillsFile)
 
 industries = readFileList(industriesFile)
