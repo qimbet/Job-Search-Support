@@ -284,7 +284,7 @@ stepButtonLabel.set("Button Label")
 
 #Button definitions
 infoEditButton = tk.Button(root, text="Edit Personal Information", command=editPersonalInfo, padx = 5, pady = 5)
-programEditButton = tk.Button(root, text="Edit Program Information", command=editProgramInfo, padx = 5, pady = 5)
+programEditButton = tk.Button(root, text="Edit Program Settings", command=editProgramInfo, padx = 5, pady = 5)
 nextStepButton = tk.Button(root, text="Next Step", command=nextStep, padx = 10, pady = 15, borderwidth=5)
 
 infoEditButton.grid(row=0, column=2, sticky="ne", padx=10, pady=10)     
