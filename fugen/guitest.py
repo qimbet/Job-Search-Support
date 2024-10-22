@@ -67,29 +67,28 @@ if True:
 #           *************************************************************************************************************************
 root = tk.Tk()
 root.title("Follow-up Generator")
-root.geometry('800x650')
-root.minsize(300, 150)
+root.geometry('800x600')
+root.minsize(200, 40)
 root.configure(bg="#f1eacf")
 
 #Grid Setup
-root.grid_columnconfigure(0, weight=1)
-root.grid_columnconfigure(1, weight=1)
-root.grid_columnconfigure(2, weight=1)
-root.grid_rowconfigure(0, weight=0)
-root.grid_rowconfigure(1, weight=0)
-root.grid_rowconfigure(2, weight=0)
-root.grid_rowconfigure(3, weight=0)
-root.grid_rowconfigure(4, weight=0)
-root.grid_rowconfigure(5, weight=1)
-root.grid_rowconfigure(6, weight=1)
+root.grid_columnconfigure(0, weight=1)              
+root.grid_columnconfigure(1, weight=1)              
+root.grid_columnconfigure(2, weight=1)              
+root.grid_rowconfigure(0, weight=1)                 #Personal Info
+root.grid_rowconfigure(1, weight=1)                 #Program Info
+root.grid_rowconfigure(2, weight=0)                 #Prompt Display
+root.grid_rowconfigure(3, weight=1)                 #Prompt Details
+root.grid_rowconfigure(4, weight=0)                 #Previous Entries
+root.grid_rowconfigure(5, weight=0, minsize=150)    #text entry 
+root.grid_rowconfigure(6, weight=0, minsize=150)    #step button
 
 # Create a text input field
-inputField = tk.Entry(root)
-inputField.grid(row=5, column=0, columnspan=3, sticky="nesw", padx=20, pady=5)
+inputField = tk.Entry(root, relief="sunken", justify="center")
+inputField.grid(row=5, column=0, columnspan=3, sticky="nesw", padx=20, pady=(15,10))
 
 #inputField.bind("<Return>", nextStep)
 root.bind("<Return>", exitButton)
-
 root.after(100, setFocus())
 
 # Text output fields 
