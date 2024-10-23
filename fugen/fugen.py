@@ -35,11 +35,17 @@ industriesFile = "Industries"
 companiesFile = "Companies"
 valuesFile = "Values"
 
-allFilesList = [hiringManagerFile, footerFile, identityFile, jobFile, skillsFile, industriesFile, companiesFile, valuesFile]
-
 #Folder Names
 archiveFolder = "Letter_Archive"
 dataFolder = "Data"
+
+
+workingList = ["Hiring Manager", "Dates", "Jobs", "Identity", "Skills", "Industries", "Companies", "Values", "Titles"]
+#                   0               1       2          3          4           5            6           7        8
+
+allFilesList = [hiringManagerFile, footerFile, jobFile, identityFile, skillsFile, industriesFile, companiesFile, valuesFile]
+#                   0                  1          2           3           4             5                6           7      
+
 
 #Directories    ----------------------------------------------------------------------
 
@@ -54,8 +60,6 @@ if not os.path.exists(archiveFolder):
 
 if not os.path.exists(dataFolder):
     os.makedirs(dataFolder)
-
-
 
 programDirectory = os.path.dirname(os.path.realpath(__file__))  
 archiveDir = os.path.join(programDirectory, archiveFolder)
@@ -135,7 +139,7 @@ def personalInfoInput():
     thirdInput.grid(row=2, column=1, padx=10, pady=5)
 
 
-    def saveClose():
+    def saveClose(event=None):
         personalInfo = ["Name", "Email", "Phone Number"]
         personalInfo[0] = name.get()
         personalInfo[1] = email.get()
@@ -146,8 +150,7 @@ def personalInfoInput():
     #Save/Close Button
     saveButton = tk.Button(popup, text="Save", command=saveClose)
     saveButton.grid(row=3, columnspan=2, padx=10, pady=10)
-    saveButton.bind("<Return>", lambda e: saveClose())
-    # return personalInfo
+    popup.bind("<Return>", saveClose)
 
 def writeToFile(fileName, lst):
     with open(f'{fileName}.txt', 'w') as file:
@@ -182,7 +185,7 @@ def userChoiceRead(inputBox, errBox, fileName):
         else:
             errBox.config(bg=errColour)
             errBox.set("ERROR:\nInput not recognized! Please try again:\n")
-            userChoiceRead(inputBox, errBox, fileName)
+            userChoiceRead(inputBox, errBox, fileName)                      #this should be bound to a buttonPress
     elif userInput == "":
          errBox.config(bg=bgColour)
          return "" 
@@ -193,12 +196,6 @@ def userChoiceRead(inputBox, errBox, fileName):
         inputBox.delete(0, tk.END)
         errBox.config(bg=bgColour)
         return userInput
-
-def choicePick(scrollBox, fileName, dictEntry, inputBox, errBox):  #Prompts user, and returns the string corresponding to the user's choice
-    lst = dictEntry[0]
-    printListToScroll(scrollBox, lst)
-    choice = userChoiceRead(inputBox, errBox, fileName)
-    return choice
 
 def makeFooter ():
     footerList = ftl(footerFile)
@@ -218,16 +215,37 @@ def ftl(fileName): #extracts file contents into a list
             allLines.append(line.strip())
         return allLines
 
-def showPrompt(dictEntry, promptField, detailsField):
-    prompt = dictEntry[1][0]
-    examples = "\n".join(dictEntry[1][1::])
+def choicePick(scrollBox, dictEntry, inputBox, errBox):  #Prompts user, and returns the string corresponding to the user's choice
+    fileName = dictToFileName(dictEntry)
+    lst = dictEntry[1]
+    printListToScroll(scrollBox, lst)
+    choice = userChoiceRead(inputBox, errBox, fileName)
+    return choice
 
-    if len(dictEntry) <= 3: #if a substitution list exists
-        examples.format(tuple(dictEntry[2]))
-        
+def showPrompt(dictEntry, promptField, detailsField):
+    prompt = dictEntry[2][0]
+    examples = "\n".join(dictEntry[2][1::])
+
+    if len(dictEntry) <= 4: #if a substitution list exists in the Dictionary
+        examples.format(tuple(dictEntry[3]))
+
     promptField.set(prompt)
     detailsField.set(examples)
 
+def showChoose(dictEntry, scrollBox, inputBox, errBox, promptField, detailsField):
+    global workingList
+    showPrompt(dictEntry, promptField, detailsField)
+    workingList[dictEntry[0]] = choicePick(scrollBox, dictEntry, inputBox, errBox)
+
+def dictToFileName(dictEntry):
+    global allFilesList
+    if dictEntry[0] == 1:
+        fileName =  ""
+    elif dictEntry[0] == 8:
+        fileName = allFilesList[2]
+    else:
+        fileName = allFilesList[dictEntry[0]]
+    return fileName
 
 def programSettingsInput():
     #add, remove, edit entries from lists
@@ -241,71 +259,75 @@ def programSettingsInput():
 
 #           *************************************************************************************************************************
 if True:
-    identity = "_________"
-    skillOfMerit = "_________"
-    companyName = "_________"
-    jobTitle = "_________"
-
     dates = [(dt.datetime.now() - dt.timedelta(days=10)).strftime("%B %d"), (dt.datetime.now() - dt.timedelta(days=7)).strftime("%B %d")]
-    allDict = ["Hiring Manager", "Dates", "Jobs", "Identity", "Skills", "Industries", "Companies", "Values", "Titles"]
 
+    
 
     #The formatting for promptDict is a little messy. I'll break it down:
     #The dictionary associates each variable (string-named) with a list of lists:
-        #[previous entries], ["prompt", *"examples"], [*substitutionsForPrompts]
+    #   [index, [previous entries], ["prompt", *"examples"], [*substitutionsForPrompts] ]
 
     promptDict = {
-        "Hiring Manager":   [ftl(hiringManagerFile),    
+        "Hiring Manager":   [0,
+                                ftl(hiringManagerFile),    
                                 ["What is the hiring manager's name?", 
                                 "If you don't know, leave this section blank and press enter."]     
                             ],
 
-        "Dates":            [dates,                     
+        "Dates":            [1,   
+                                dates,                     
                                 ["When did you apply?", 
                                 "The dates given here are 10 and 7 days ago, for convenience."]             
                             ],
 
-        "Jobs":             [ftl(jobFile),              
+        "Jobs":             [2,
+                                ftl(jobFile),              
                                 ["What's the job title?"]           
                             ],
 
-        "Identity":         [ftl(identityFile),         
+        "Identity":         [3,
+                                ftl(identityFile),         
                                 ["What is your academic/professional background?", 
                                 "Please include the appropriate indefinite article:", 
                                 "\t_a_ university student",
                                 "\t_an_ engaged member of my community"]            
                             ],
 
-        "Skills":           [ftl(skillsFile),           
+        "Skills":           [4,
+                                ftl(skillsFile),           
                                 ["As {}, I carry [_________] that uniquely positions me to thrive...",  
                                 "a highly developed understanding of [_________]", 
                                 "an aptitude in [_________]"],                         
-                                [identity]
+                                [workingList[3]]
                             ],
 
-        "Industries":       [ftl(industriesFile),       
+        "Industries":       [5,
+                                ftl(industriesFile),       
                                 ["I carry {} that uniquely positions me to [________]", 
                                 "thrive in the ________ industry", 
                                 "contribute value in the role of {}"], 
-                                [skillOfMerit, jobTitle]
+                                [workingList[4], workingList[2]]
                             ], 
 
-        "Companies":        [ftl(companiesFile),        
+        "Companies":        [6,
+                                ftl(companiesFile),        
                                 ["What is the company name?"]     
                             ],
 
-        "Values":           [ftl(valuesFile),           
+        "Values":           [7,
+                                ftl(valuesFile),           
                                 ["Why do you want to work at this specific company?", 
                                 "Drawn to {} because of your [________]", 
                                 "commitment to sustainability", 
                                 "demonstrated support of social equity programs "], 
-                                [companyName]
+                                [workingList[6]]
                             ],
 
-        "Titles":           [ftl(jobFile),              
+        "Titles":           [8,
+                                ftl(jobFile),              
                                 ["What title do you want to present yourself with?", 
                                 "Posting is for: {}"], 
-                                [jobTitle]
+                                [workingList[2]]
                             ]
     }
 
@@ -431,51 +453,16 @@ if True:
 
 root.mainloop()
 footer = makeFooter()
-
-if True:
-    # HMPrompt = "What is the hiring manager's name?\nIf you don't know, leave blank and press enter."
-    # hiringManager = autofill(HMPrompt, hiringManagerFile).title()
-    # if hiringManager != "":
-    #     hiringManager = " " + hiringManager
-
-    # dates = [(dt.datetime.now() - dt.timedelta(days=10)).strftime("%B %d"), (dt.datetime.now() - dt.timedelta(days=7)).strftime("%B %d")]
-    # datePrompt = "When did you apply? \n"
-    # date = autofillList(datePrompt, dates)
-
-    # jobs = readFileList(jobFile)
-    # jobPrompt = "What's the job title?\n"
-    # jobTitle = autofill(jobPrompt, jobFile).title()
-
-    # identityPrompt = "What is your academic/professional background? \nPlease include the appropriate indefinite article (i.e. 'a university student', or 'an engaged member of my community')"
-    # identity = autofill(identityPrompt, identityFile).lower()
-
-    # skills = readFileList(skillsFile)
-    # skillPrompt = f"As {identity}, I carry [an understanding of _________] that uniquely positions me to thrive...\n ex.\n - a highly developed understanding of [x]\n - an aptitude in [y]\n"
-    # skillOfMerit = autofill(skillPrompt, skillsFile)
-
-    # industries = readFileList(industriesFile)
-    # industryPrompt = f"I carry {skillOfMerit} that uniquely positions me to [thrive in the ________ industry]\n ex.\n - contribute value in the role of {jobTitle}\n - thrive in the constantly evolving role of {jobTitle}"
-    # jobIndustry = autofill(industryPrompt, industriesFile)
-
-    # companies = readFileList(companiesFile)
-    # companyPrompt = "What is the company name?\n"
-    # companyName = autofill(companyPrompt, companiesFile)
-
-    # values = readFileList(valuesFile)
-    # valuePrompt = f"Why do you want to work at this specific company?\nDrawn to {companyName} because of your [commitment to ______]\n ex.\n - commitment to sustainability\n - demonstrated support of social equity programs "
-    # companyValue = autofill(valuePrompt, valuesFile)
-
-    # titles = readFileList("Jobs")
-    # titlePrompt = f"What title do you want to present yourself with?\nPosting is for: {jobTitle}\n"
-    # personalTitle = autofill(titlePrompt, jobFile)
-    True
-
 emailBody = messageBody()
-bodyFormatted = emailBody.format(hiringManager, date, jobTitle, identity, skillOfMerit, jobIndustry, companyName, companyValue)
+
+for val in promptDict:
+    showChoose(val, prevEntries, inputField, instructions, promptDisplay, promptDetails) #How does the 'next step' button fit in?
+
+bodyFormatted = emailBody.format(tuple(workingList))
 fullEmail = bodyFormatted + "\n\n" + footer
 
-print("Current letter is: \n")
-print(fullEmail + "\n\n")
+# print("Current letter is: \n")
+# print(fullEmail + "\n\n")
 
 os.chdir(programDirectory)
 os.chdir(archiveFolder)
