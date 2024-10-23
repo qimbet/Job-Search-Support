@@ -11,7 +11,6 @@ def d(msg):
     if debug == True:
         print(msg)
 
-guiDebug = True
 
 #           *************************************************************************************************************************
 
@@ -70,42 +69,114 @@ for element in allFilesList:
 
 #           *************************************************************************************************************************
 
-if True:
-    def printToDisplay(outputField, *text):
-        allInputs = []
-        for line in text:
-            allInputs.append(line)
+pinTop = False
 
-        delim = "\n"
-        allLinesInOne = delim.join(text)
-        outputField.set(allLinesInOne)
+def printToDisplay(outputField, *text):
+    allInputs = []
+    for line in text:
+        allInputs.append(line)
 
-    def setFocus():
-        inputField.focus_force()
+    delim = "\n"
+    allLinesInOne = delim.join(text)
+    outputField.set(allLinesInOne)
 
-    def editPersonalInfo():
-        pass
+def setFocus():
+    inputField.focus_force()
 
-    def editProgramInfo():
-        pass
+def changePin(event=None):
+    buttonStatus=pinWindow.get()
+    if buttonStatus == True:
+        root.attributes("-topmost", 1)
+    elif buttonStatus == False:
+        root.attributes("-topmost", 0)
+
+def editPersonalInfo():
     
-    def runProgram():
-        pass
+    pass
 
-    def nextStep():
-        if True: 
-            print("exiting...")
-            exit()
+def editProgramInfo():
+    pass
 
-    def exitButton(event=None):
-        root.quit()
+def runProgram():
+    pass
+
+def readInputText(textField):
+    inputVar = textField.get()
+
+    return inputVar
+
+def readInputInteger(textField, lowerBound, upperBound):
+    pass
+
+def nextStep():
+    if True: 
+        print("exiting...")
+        exit()
+
+def exitButton(event=None):
+    root.quit()
+
+#           *************************************************************************************************************************
+
+#                                                                            GUI-INTEGRATED BACK-END
+
+#           *************************************************************************************************************************
+
+def personalInfoInput():
+    popup = tk.Toplevel(root)
+    popup.title("Personal Info")
     
-    def changePin(event=None):
-        # global pinTop = False
-        # root.attributes("-topmost", True)
-        pass
+    # Variables to store the input from the text fields
+    name = tk.StringVar()
+    email = tk.StringVar()
+    phoneNumber = tk.StringVar()
+
+    #Input Fields
+    nameLabel = tk.Label(popup, text="Full Name:")
+    nameLabel.grid(row=0, column=0, padx=10, pady=5)
+    firstInput = tk.Entry(popup, textvariable=name)
+    firstInput.grid(row=0, column=1, padx=10, pady=5)
+    firstInput.focus_set()
+
+    emailLabel = tk.Label(popup, text="Email:")
+    emailLabel.grid(row=1, column=0, padx=10, pady=5)
+    secondInput = tk.Entry(popup, textvariable=email)
+    secondInput.grid(row=1, column=1, padx=10, pady=5)
+
+    phoneNumberLabel = tk.Label(popup, text="Phone Number:")
+    phoneNumberLabel.grid(row=2, column=0, padx=10, pady=5)
+    thirdInput = tk.Entry(popup, textvariable=phoneNumber)
+    thirdInput.grid(row=2, column=1, padx=10, pady=5)
 
 
+    def saveClose():
+        personalInfo = ["Name", "Email", "Phone Number"]
+        personalInfo[0] = name.get()
+        personalInfo[1] = email.get()
+        personalInfo[2] = phoneNumber.get()
+        popup.destroy()
+        writeToFile(footerFile, personalInfo)
+
+    #Save/Close Button
+    saveButton = tk.Button(popup, text="Save", command=saveClose)
+    saveButton.grid(row=3, columnspan=2, padx=10, pady=10)
+    saveButton.bind("<Return>", lambda e: saveClose())
+    # return personalInfo
+
+def writeToFile(fileName, lst):
+    with open(f'{fileName}.txt', 'w') as file:
+        for element in lst:
+            print(element)
+            file.write(f"{element}\n")
+
+def fileAppend(fileName, lst):
+    with open(f'{fileName}.txt', 'a') as file:
+        for element in lst:
+            file.write(f"{element}\n")
+
+def programSettingsInput():
+    userInput = personalInfoInput()
+    instructions.set("it might work idk\nnice")
 
 #           *************************************************************************************************************************
 
@@ -187,23 +258,9 @@ def fileReadFull(fileName):
         content = file.read()
     return content
 
-def fileAppend(fileName, lst):
-    with open(f'{fileName}.txt', 'a') as file:
-        for element in lst:
-            file.write(f"{element}\n")
 
-def clearFile(fileName):
-    with open(f'{fileName}.txt', 'w') as file:
-        file.write("")
 
 def makeFooter ():
-
-    uchoice = input("Press enter to start the follow up email process. \nType 'setup' else to change your personal info (you only have to do this on your first setup).\n")
-    if uchoice != "":
-        clearFile(footerFile)
-        vals = promptInputs(["Name", "email", "Phone Number"])
-        fileAppend(footerFile, vals)
-
     footerList = readFileList(footerFile)
     footer = ""
     count = 0
@@ -212,7 +269,6 @@ def makeFooter ():
         if count == 0: #adds a linebreak after Name
             footer = footer + "\n"
         count += 1
-
     return footer
 
 def messageBody():
@@ -229,13 +285,18 @@ I have re-attached my resume for your convenience.
 Looking forward to hearing from you! """
     return body
 
+def howToUse():
+    instructions = """Welcome to the follow-up email generator!
+    This is a tool designed to simplify one of the many tasks associated with job searching. To begin, """
+    return instructions
+
 #           *************************************************************************************************************************
 
 #                                                                            GUI SETUP
 
 #           *************************************************************************************************************************
 root = tk.Tk()
-root.title("Follow-up Generator - GUItest")
+root.title("Follow-up Generator - fugen")
 root.geometry('800x600')
 root.minsize(200, 40)
 root.configure(bg="#f1eacf")
@@ -254,7 +315,6 @@ root.grid_rowconfigure(3, weight=1)                 #Prompt Details
 root.grid_rowconfigure(4, weight=0)                 #Previous Entries
 root.grid_rowconfigure(5, weight=0, minsize=150)    #text entry 
 root.grid_rowconfigure(6, weight=0, minsize=150)    #step button
-
 
 # Text input field
 inputField = tk.Entry(root, relief="sunken", justify="center")
@@ -287,23 +347,20 @@ promptDisplay.set("Prompt Display")
 promptDetails.set("Prompt Details")
 prevEntries.set("Previous Entries (archive)")
 
+#Button Variables
+pinWindow = tk.BooleanVar()
+
 #Button definitions
-infoEditButton = tk.Button(buttonFrame, text="Edit Personal Information", command=editPersonalInfo, padx = 5, pady = 5)
-programEditButton = tk.Button(buttonFrame, text="Edit Program Settings", command=editProgramInfo, padx = 5, pady = 5)
-setOnTopButton = tk.Checkbutton(buttonFrame, text="Fix Window on screen", command=changePin, padx = 5, pady = 5)
+infoEditButton = tk.Button(buttonFrame, text="Edit Personal Information", command=personalInfoInput, padx = 5, pady = 5)
+programEditButton = tk.Button(buttonFrame, text="Edit Program Settings", command=programSettingsInput, padx = 5, pady = 5)
+setOnTopButton = tk.Checkbutton(buttonFrame, text="Fix Window on screen", command=changePin, padx = 5, pady = 5, variable=pinWindow, onvalue=True, offvalue=False)
 
 nextStepButton = tk.Button(root, text="Next Step", command=nextStep, padx = 10, pady = 15, borderwidth=5)
-
-# infoEditButton.grid(row=0, column=2, sticky="ew", padx=(350, 10), pady=10)     
-# programEditButton.grid(row=1, column=2, sticky="new", padx=(350, 10), pady=10)
-# setOnTopButton.grid(row=1, column=2, sticky="sew", padx=(350, 10), pady=10)    
-
 nextStepButton.grid(row=6, rowspan=1, column=0, columnspan=3, sticky="nesw", padx=35, pady=35)
 
 infoEditButton.pack(side="top", fill="x", pady=5) 
 programEditButton.pack(side="top", fill="x", pady=5) 
 setOnTopButton.pack(side="top", fill="x", pady=5) 
-
 
 #           *************************************************************************************************************************
 
@@ -365,3 +422,7 @@ with open(f"Reply - {jobTitle} - {companyName}.txt", "w") as file:
 
 os.chdir(programDirectory)
 pp.copy(fullEmail)
+
+#tk object usage examples
+#promptReader.set("Output will be displayed here.")
+#x = inputField.get()
