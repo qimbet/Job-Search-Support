@@ -1,0 +1,29 @@
+Prompt for setup/personal info:
+	Name
+	email
+	phone number
+	
+Include button: edit stored values
+	remove
+	add
+	edit
+	
+Begin (input range): 
+	Manager name
+	Date (not stored in memory)
+	Job Title
+	Prompt 1 (background)	(check for blank entry! Data validation)
+	prompt 2 (understanding of)
+	company name
+	prompt 3 (appeal of company)
+	Personal Title
+
+	For each prompt: 
+		Prompt text
+		2 examples
+		List options
+		Text entry field
+
+Show in corner: 
+	setup info
+	

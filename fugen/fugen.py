@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 #This is a follow-up message writer for job applications, mad-libs style. 
 
-
 import os 
 import datetime as dt
 import pyperclip as pp
@@ -11,6 +10,8 @@ debug = True
 def d(msg):
     if debug == True:
         print(msg)
+
+guiDebug = True
 
 #           *************************************************************************************************************************
 
@@ -69,34 +70,41 @@ for element in allFilesList:
 
 #           *************************************************************************************************************************
 
-def printToDisplay(outputField, *text):
-    allInputs = []
-    for line in text:
-        allInputs.append(line)
+if True:
+    def printToDisplay(outputField, *text):
+        allInputs = []
+        for line in text:
+            allInputs.append(line)
 
-    delim = "\n"
-    allLinesInOne = delim.join(text)
-    outputField.set(allLinesInOne)
+        delim = "\n"
+        allLinesInOne = delim.join(text)
+        outputField.set(allLinesInOne)
 
-def setFocus():
-    inputField.focus_force()
+    def setFocus():
+        inputField.focus_force()
 
-def editPersonalInfo():
-    pass
+    def editPersonalInfo():
+        pass
 
-def editProgramInfo():
-    pass
+    def editProgramInfo():
+        pass
+    
+    def runProgram():
+        pass
 
-def runProgram():
-    pass
+    def nextStep():
+        if True: 
+            print("exiting...")
+            exit()
 
-def nextStep():
-    if True: 
-        print("exiting...")
-        exit()
+    def exitButton(event=None):
+        root.quit()
+    
+    def changePin(event=None):
+        # global pinTop = False
+        # root.attributes("-topmost", True)
+        pass
 
-def exitButton(event=None):
-    root.quit()
 
 
 #           *************************************************************************************************************************
@@ -227,29 +235,32 @@ Looking forward to hearing from you! """
 
 #           *************************************************************************************************************************
 root = tk.Tk()
-root.title("Follow-up Generator")
+root.title("Follow-up Generator - GUItest")
 root.geometry('800x600')
 root.minsize(200, 40)
 root.configure(bg="#f1eacf")
 
 #Grid Setup
-root.grid_columnconfigure(0, weight=1)              
-root.grid_columnconfigure(1, weight=1)              
-root.grid_columnconfigure(2, weight=1)              
+buttonFrame = tk.Frame(root)
+buttonFrame.grid(row=0, column=2, rowspan=2, sticky="news", padx=20, pady=20)
+
+root.grid_columnconfigure(0, weight=1, minsize=150)              
+root.grid_columnconfigure(1, weight=0)              
+root.grid_columnconfigure(2, weight=0)              
 root.grid_rowconfigure(0, weight=1)                 #Personal Info
-root.grid_rowconfigure(1, weight=1)                 #Program Info
+root.grid_rowconfigure(1, weight=1, minsize=55)     #Program Settings
 root.grid_rowconfigure(2, weight=0)                 #Prompt Display
 root.grid_rowconfigure(3, weight=1)                 #Prompt Details
 root.grid_rowconfigure(4, weight=0)                 #Previous Entries
 root.grid_rowconfigure(5, weight=0, minsize=150)    #text entry 
 root.grid_rowconfigure(6, weight=0, minsize=150)    #step button
 
-# Create a text input field
+
+# Text input field
 inputField = tk.Entry(root, relief="sunken", justify="center")
 inputField.grid(row=5, column=0, columnspan=3, sticky="nesw", padx=20, pady=(15,10))
 
-if debug==True:
-    root.bind("<Return>", exitButton)
+root.bind("<Return>", exitButton)
 root.after(100, setFocus())
 
 # Text output fields 
@@ -257,7 +268,6 @@ instructions = tk.StringVar()
 promptDisplay = tk.StringVar()
 promptDetails = tk.StringVar()
 prevEntries = tk.StringVar()
-stepButtonLabel = tk.StringVar()
 
 #Output field display labels
 instructionsCell = tk.Label(root, textvariable=instructions, wraplength=400)
@@ -272,24 +282,27 @@ promptDetailsCell.grid(row=3, column=0, columnspan=3, sticky="ew", padx=10, pady
 prevEntriesCell = tk.Label(root, textvariable=prevEntries, wraplength=400)
 prevEntriesCell.grid(row=4, column=0, columnspan=3, sticky="ew", padx=10, pady=10)
 
-stepButtonLabelCell = tk.Label(root, textvariable=stepButtonLabel, wraplength=400)
-stepButtonLabelCell.grid(row=0, column=2, sticky="ne", padx=10, pady=10)
-
 instructions.set("Instructions cell")
 promptDisplay.set("Prompt Display")
 promptDetails.set("Prompt Details")
 prevEntries.set("Previous Entries (archive)")
-stepButtonLabel.set("Button Label")
-
 
 #Button definitions
-infoEditButton = tk.Button(root, text="Edit Personal Information", command=editPersonalInfo, padx = 5, pady = 5)
-programEditButton = tk.Button(root, text="Edit Program Settings", command=editProgramInfo, padx = 5, pady = 5)
+infoEditButton = tk.Button(buttonFrame, text="Edit Personal Information", command=editPersonalInfo, padx = 5, pady = 5)
+programEditButton = tk.Button(buttonFrame, text="Edit Program Settings", command=editProgramInfo, padx = 5, pady = 5)
+setOnTopButton = tk.Checkbutton(buttonFrame, text="Fix Window on screen", command=changePin, padx = 5, pady = 5)
+
 nextStepButton = tk.Button(root, text="Next Step", command=nextStep, padx = 10, pady = 15, borderwidth=5)
 
-infoEditButton.grid(row=0, column=2, sticky="ne", padx=10, pady=10)     
-programEditButton.grid(row=1, column=2, sticky="ne", padx=10, pady=10)
+# infoEditButton.grid(row=0, column=2, sticky="ew", padx=(350, 10), pady=10)     
+# programEditButton.grid(row=1, column=2, sticky="new", padx=(350, 10), pady=10)
+# setOnTopButton.grid(row=1, column=2, sticky="sew", padx=(350, 10), pady=10)    
+
 nextStepButton.grid(row=6, rowspan=1, column=0, columnspan=3, sticky="nesw", padx=35, pady=35)
+
+infoEditButton.pack(side="top", fill="x", pady=5) 
+programEditButton.pack(side="top", fill="x", pady=5) 
+setOnTopButton.pack(side="top", fill="x", pady=5) 
 
 
 #           *************************************************************************************************************************
@@ -301,9 +314,6 @@ nextStepButton.grid(row=6, rowspan=1, column=0, columnspan=3, sticky="nesw", pad
 root.mainloop()
 
 footer = makeFooter()
-d("Footer made!")
-d(footer)
-
 
 HMPrompt = "What is the hiring manager's name?\nIf you don't know, leave blank and press enter."
 hiringManager = autofill(HMPrompt, hiringManagerFile).title()
