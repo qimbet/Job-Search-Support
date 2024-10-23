@@ -18,6 +18,10 @@ def d(msg):
 
 #           *************************************************************************************************************************
 
+#Colours
+bgColour  = "#f1eacf"
+errColour = "#ffad95"
+
 #File Names:    ----------------------------------------------------------------------
 hiringManagerFile = "Hiring_Managers"
 footerFile = "Personal_Info"
@@ -121,6 +125,10 @@ def exitButton(event=None):
 #                                                                            GUI-INTEGRATED BACK-END
 
 #           *************************************************************************************************************************
+def inst(message, mood=None):
+    instructions.set(message)
+    if mood != None:
+        instructions.config(bg=mood)
 
 def personalInfoInput():
     popup = tk.Toplevel(root)
@@ -174,91 +182,45 @@ def fileAppend(fileName, lst):
         for element in lst:
             file.write(f"{element}\n")
 
-def programSettingsInput():
-    userInput = personalInfoInput()
-    instructions.set("it might work idk\nnice")
+def printListToScroll(scrollBox, lst):
+    scrollBox.delete("1.0", tk.END)
 
-#           *************************************************************************************************************************
-
-#                                                                            BACK-END FUNCTIONS
-
-#           *************************************************************************************************************************
-
-def autofill(prompt, fileName):
-    madLib = readFileList(fileName)
-    count = 1
-    print(f"\n\n{prompt}")
-    if len(madLib) != 0:
-        print("Choices: \n")
-        for element in madLib:
-            print(f"{count} - {element}\n")
-            count +=1
-    while (True):
-        choice = input("Would you like to use a prefill?\nEnter your choice if so, or type text manually:\n")
-        choice = choice.strip()
-
-        if choice.isdigit():
-            if (int(choice)) <= len(madLib):
-                output = madLib[int(choice)-1]
-                return output
-            else:
-                print("Input not recognized! Please try again:\n")
-                continue
-        elif choice == "":
-            return ""
-        else:
-            tempList = []
-            tempList.append(choice)
-            fileAppend(fileName, tempList)
-            return choice
-
-def autofillList(prompt, madLib):
-    count = 1
-    print(f"\n\n{prompt}")
-    if len(madLib) != 0:
-        print("Choices: \n")
-        for element in madLib:
-            print(f"{count} - {element}\n")
-            count +=1
-    while (True):
-        choice = input("Would you like to use a prefill?\nEnter your choice if so, or type text manually:\n")
-        choice = choice.strip()
-
-        if choice.isdigit():
-            if (int(choice)) <= len(madLib):
-                output = madLib[int(choice)-1]
-                return output
-            else:
-                print("Input not recognized! Please try again:\n")
-                continue
-        elif choice == "":
-            return ""
-        else:
-            tempList = []
-            tempList.append(choice)
-            return choice
-
-def promptInputs(lst):
-    outLst = []
+    count = 0
     for element in lst:
-        x = input(f"Please enter your {element}: ")
-        outLst.append(x)
-    return outLst
+        scrollBox.insert(tk.END, f"{count} - {element} \n")
+        count += 1
 
-def readFileList(fileName):
-    d("In readFileList")
-    with open(f'{fileName}.txt', 'r') as file:
-        allLines = []
-        for line in file: 
-            allLines.append(line.strip())
-        return allLines
+def userChoiceRead(inputBox, errBox, fileName): ##########################################################
+    lst = readFileList(fileName)
+    userInput = inputBox.get()
+    userInput = userInput.strip()
 
-def fileReadFull(fileName):
-    with open(f"{fileName}.txt", "r") as file:
-        content = file.read()
-    return content
+    if userInput.isdigit():
+        if (int(userInput)) <= len(lst):
+            output = lst[int(userInput)-1]
+            inputBox.delete(0, tk.END)
+            errBox.config(bg=bgColour)
+            return output
+        else:
+            errBox.config(bg=errColour)
+            errBox.set("ERROR:\nInput not recognized! Please try again:\n")
+            userChoiceRead(inputBox, errBox, fileName)
+    elif userInput == "":
+         errBox.config(bg=bgColour)
+         return "" 
+    else:
+        tempList = []
+        tempList.append(userInput)
+        fileAppend(fileName, tempList)
+        inputBox.delete(0, tk.END)
+        errBox.config(bg=bgColour)
+        return userInput
 
-
+def choicePick(scrollBox, fileName, inputBox, errBox):  #returns the string corresponding to the user's choice
+    lst = readFileList(fileName)
+    printListToScroll(scrollBox, lst)
+    choice = userChoiceRead(inputBox, errBox, fileName)
+    return choice
 
 def makeFooter ():
     footerList = readFileList(footerFile)
@@ -270,6 +232,36 @@ def makeFooter ():
             footer = footer + "\n"
         count += 1
     return footer
+
+def ftl(fileName): #extracts file contents into a list
+    with open(f'{fileName}.txt', 'r') as file:
+        allLines = []
+        for line in file: 
+            allLines.append(line.strip())
+        return allLines
+
+def programSettingsInput():
+    pass
+
+
+#           *************************************************************************************************************************
+
+#                                                                            UI PROMPTS
+
+#           *************************************************************************************************************************
+
+dates = [(dt.datetime.now() - dt.timedelta(days=10)).strftime("%B %d"), (dt.datetime.now() - dt.timedelta(days=7)).strftime("%B %d")]
+promptDict = {
+    "Hiring Manager":   [ftl(hiringManagerFile),    "What is the hiring manager's name?\nIf you don't know, leave blank and press enter."]
+    "Dates":            [dates,                     "When did you apply?"]
+    "Jobs":             [ftl(jobFile),              "What's the job title?"]
+    "Identity Prompt":  [ftl(identityFile),         "What is your academic/professional background? \nPlease include the appropriate indefinite article (i.e. 'a university student', or 'an engaged member of my community')"]
+    "Skills":           [ftl(skillsFile),           f"As {identity}, I carry [an understanding of _________] that uniquely positions me to thrive...\n ex.\n - a highly developed understanding of [x]\n - an aptitude in [y]\n"]
+    "Industries":       [ftl(industriesFile),       f"I carry {skillOfMerit} that uniquely positions me to [thrive in the ________ industry]\n ex.\n - contribute value in the role of {jobTitle}\n - thrive in the constantly evolving role of {jobTitle}"]
+    "Companies":        [ftl(companiesFile),        "What is the company name?\n"]
+    "Values":           [ftl(valuesFile),           f"Why do you want to work at this specific company?\nDrawn to {companyName} because of your [commitment to ______]\n ex.\n - commitment to sustainability\n - demonstrated support of social equity programs "]
+    "Titles":           [ftl(jobFile),              f"What title do you want to present yourself with?\nPosting is for: {jobTitle}\n"]
+}
 
 def messageBody():
     body = """Hi{},
@@ -295,72 +287,96 @@ def howToUse():
 #                                                                            GUI SETUP
 
 #           *************************************************************************************************************************
-root = tk.Tk()
-root.title("Follow-up Generator - fugen")
-root.geometry('800x600')
-root.minsize(200, 40)
-root.configure(bg="#f1eacf")
+if True:
+    root = tk.Tk()
+    root.title("Follow-up Generator - fugen")
+    root.geometry('800x650')
+    root.minsize(400, 450)
+    root.configure(bg=bgColour)
 
-#Grid Setup
-buttonFrame = tk.Frame(root)
-buttonFrame.grid(row=0, column=2, rowspan=2, sticky="news", padx=20, pady=20)
+    #Grid and Frame Setups
+    buttonFrame = tk.Frame(root)
+    buttonFrame.grid(row=0, column=2, rowspan=2, sticky="news", padx=20, pady=20)
+    buttonFrame.configure(bg=bgColour)
+    buttonFrame.rowconfigure(0, weight=0)
 
-root.grid_columnconfigure(0, weight=1, minsize=150)              
-root.grid_columnconfigure(1, weight=0)              
-root.grid_columnconfigure(2, weight=0)              
-root.grid_rowconfigure(0, weight=1)                 #Personal Info
-root.grid_rowconfigure(1, weight=1, minsize=55)     #Program Settings
-root.grid_rowconfigure(2, weight=0)                 #Prompt Display
-root.grid_rowconfigure(3, weight=1)                 #Prompt Details
-root.grid_rowconfigure(4, weight=0)                 #Previous Entries
-root.grid_rowconfigure(5, weight=0, minsize=150)    #text entry 
-root.grid_rowconfigure(6, weight=0, minsize=150)    #step button
+    entriesFrame = tk.Frame(root)
+    entriesFrame.grid(row=2, column=0, columnspan=3, sticky="nsew", padx=10, pady=10)
+    entriesFrame.columnconfigure(0, weight=1)
+    entriesFrame.rowconfigure(0, weight=1)  
 
-# Text input field
-inputField = tk.Entry(root, relief="sunken", justify="center")
-inputField.grid(row=5, column=0, columnspan=3, sticky="nesw", padx=20, pady=(15,10))
+    promptFrame = tk.Frame(root)
+    promptFrame.grid(row=1, column=0, columnspan=3, sticky="nsew", padx=10, pady=10)
 
-root.bind("<Return>", exitButton)
-root.after(100, setFocus())
+    textFrame = tk.Frame(root)
+    textFrame.grid(row=3, column=0, columnspan=3, sticky="nesw", padx=20, pady=(5,10))
+    textFrame.rowconfigure(0, weight=1)
+    textFrame.columnconfigure(0,weight=1)
 
-# Text output fields 
-instructions = tk.StringVar()
-promptDisplay = tk.StringVar()
-promptDetails = tk.StringVar()
-prevEntries = tk.StringVar()
+    root.grid_columnconfigure(0, weight=2)              
+    root.grid_columnconfigure(1, weight=1)              
+    root.grid_columnconfigure(2, weight=1)   
 
-#Output field display labels
-instructionsCell = tk.Label(root, textvariable=instructions, wraplength=400)
-instructionsCell.grid(row=0, column=0, columnspan=2, sticky="nw", padx=10, pady=10)
+    root.grid_rowconfigure(0, weight=1)                 #Instructions; buttonFrame
+    root.grid_rowconfigure(1, weight=0)                 #promptFrame
+    root.grid_rowconfigure(2, weight=0)                 #Previous Entries (scrollList)
+    root.grid_rowconfigure(3, weight=0, minsize=100)    #text entry 
+    root.grid_rowconfigure(4, weight=0, minsize=150)    #step button
 
-promptDisplayCell = tk.Label(root, textvariable=promptDisplay, wraplength=400)
-promptDisplayCell.grid(row=2, column=0, columnspan=3, sticky="ew", padx=10, pady=10)
+    # Text input field
+    inputField = tk.Entry(textFrame, relief="sunken", justify="center")
+    inputField.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
 
-promptDetailsCell = tk.Label(root, textvariable=promptDetails, wraplength=400)
-promptDetailsCell.grid(row=3, column=0, columnspan=3, sticky="ew", padx=10, pady=10)
 
-prevEntriesCell = tk.Label(root, textvariable=prevEntries, wraplength=400)
-prevEntriesCell.grid(row=4, column=0, columnspan=3, sticky="ew", padx=10, pady=10)
+    root.bind("<Return>", exitButton)
+    root.after(100, setFocus())
 
-instructions.set("Instructions cell")
-promptDisplay.set("Prompt Display")
-promptDetails.set("Prompt Details")
-prevEntries.set("Previous Entries (archive)")
+    # Text output fields 
+    instructions = tk.StringVar()
+    promptDisplay = tk.StringVar()
+    promptDetails = tk.StringVar()
+    prevEntries = tk.StringVar()
 
-#Button Variables
-pinWindow = tk.BooleanVar()
+    #Output field display labels
+    instructionsCell = tk.Label(root, textvariable=instructions, relief="sunken", bd=2, wraplength=400)
+    instructionsCell.grid(row=0, column=0, columnspan=2, sticky="nwse", padx=10, pady=10)
 
-#Button definitions
-infoEditButton = tk.Button(buttonFrame, text="Edit Personal Information", command=personalInfoInput, padx = 5, pady = 5)
-programEditButton = tk.Button(buttonFrame, text="Edit Program Settings", command=programSettingsInput, padx = 5, pady = 5)
-setOnTopButton = tk.Checkbutton(buttonFrame, text="Fix Window on screen", command=changePin, padx = 5, pady = 5, variable=pinWindow, onvalue=True, offvalue=False)
+    promptDisplayCell = tk.Label(promptFrame, textvariable=promptDisplay)
+    promptDisplayCell.grid(row=0, sticky="nsew", padx=10, pady=10)
 
-nextStepButton = tk.Button(root, text="Next Step", command=nextStep, padx = 10, pady = 15, borderwidth=5)
-nextStepButton.grid(row=6, rowspan=1, column=0, columnspan=3, sticky="nesw", padx=35, pady=35)
+    promptDetailsCell = tk.Label(promptFrame, textvariable=promptDetails)
+    promptDetailsCell.grid(row=1, sticky="nsew", padx=10, pady=10)
 
-infoEditButton.pack(side="top", fill="x", pady=5) 
-programEditButton.pack(side="top", fill="x", pady=5) 
-setOnTopButton.pack(side="top", fill="x", pady=5) 
+    root.update_idletasks()  # Update the layout
+    promptDisplayCell.config(wraplength=promptFrame.winfo_width() - 20) 
+    promptDetailsCell.config(wraplength=promptFrame.winfo_width() - 20) 
+
+    prevEntriesList = tk.Listbox(entriesFrame, height =5)
+    prevEntriesList.grid(row=0, column=0, sticky="nsew")
+    scrollbar = tk.Scrollbar(entriesFrame)
+    scrollbar.grid(row=0, column=1, sticky='ns')
+    prevEntriesList.config(yscrollcommand=scrollbar.set)
+    scrollbar.config(command=prevEntriesList.yview) 
+
+    instructions.set("instructions")
+    promptDisplay.set("promptDisplay")
+    promptDetails.set("promptDetails")
+    prevEntries.set("prevEntries")
+
+    #Button Variables
+    pinWindow = tk.BooleanVar()
+
+    #Button definitions
+    infoEditButton = tk.Button(buttonFrame, text="Edit Personal Information", command=personalInfoInput, padx = 5, pady = 5)
+    programEditButton = tk.Button(buttonFrame, text="Edit Program Settings", command=programSettingsInput, padx = 5, pady = 5)
+    setOnTopButton = tk.Checkbutton(buttonFrame, text="Fix Window on screen", command=changePin, padx = 5, pady = 5, variable=pinWindow, onvalue=True, offvalue=False)
+
+    nextStepButton = tk.Button(root, text="Next Step", command=nextStep, padx = 10, pady = 15, borderwidth=5)
+    nextStepButton.grid(row=4, rowspan=1, column=0, columnspan=3, sticky="nesw", padx=35, pady=35)
+
+    infoEditButton.pack(side="top", fill="x", pady=5) 
+    programEditButton.pack(side="top", fill="x", pady=5) 
+    setOnTopButton.pack(side="top", fill="x", pady=5) 
 
 #           *************************************************************************************************************************
 
@@ -369,7 +385,6 @@ setOnTopButton.pack(side="top", fill="x", pady=5)
 #           *************************************************************************************************************************
 
 root.mainloop()
-
 footer = makeFooter()
 
 HMPrompt = "What is the hiring manager's name?\nIf you don't know, leave blank and press enter."
