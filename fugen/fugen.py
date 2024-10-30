@@ -49,7 +49,7 @@ d('PROGRAM START')
 
 def makeFile(fileName):
     with open(f"{fileName}.txt", "a") as file:
-        file.write("")
+        file.write("val")
 
 if not os.path.exists(archiveFolder):
     os.makedirs(archiveFolder)
@@ -177,12 +177,15 @@ class fugenMain:
         self.programEditButton.pack(side="top", fill="x", pady=5) 
         self.setOnTopButton.pack(side="top", fill="x", pady=5) 
 
-        self.nextStepButton = tk.Button(self.root, text="Next Step", command=lambda: self.saveCont(promptDict[workingListHardcoded[self.currentStep]]), padx = 10, pady = 15, borderwidth=5)
+        #d(f"during init. current step: {self.currentStep}\nWorking List element = {workingListHardcoded[self.currentStep]}")
+        #d(f"promptDict call type:\ncurrentStep = {type(self.currentStep)}\n working list element = {type(workingListHardcoded[self.currentStep])}\n\n")
+        #d(f"Dictionary value: {promptDict[workingListHardcoded[self.currentStep]]}\ntype: {type(promptDict[workingListHardcoded[self.currentStep]])}")
+        
+        self.nextStepButton = tk.Button(self.root, text="Next Step", command=lambda: self.saveCont(workingListHardcoded[self.currentStep]), padx = 10, pady = 15, borderwidth=5)
         self.nextStepButton.grid(row=4, rowspan=1, column=0, columnspan=3, sticky="nesw", padx=35, pady=35)
         self.root.bind("<Return>", lambda event: self.nextStepButton.invoke())
        
         self.root.after(100, self.setFocus())
-        
 
     def PIPopup(self): #Creates an instance of personalInfoPopup as a child of root
         parentWindow = tk.Toplevel(self.root)
@@ -219,7 +222,10 @@ class fugenMain:
             self.instructions.config(bg=self.bgColour)
 
     def userChoiceRead(self, dictEntry): #reads input, bound-checks integers. Outputs int() for a select value, "", or str() as appropriate. Variable return type!
+        d(f"in userChoiceRead\n dictEntry: {dictEntry}\ndictEntry type = {type(dictEntry)}")
+
         fileName = dictToFileName(dictEntry)
+        d(f"fileName = {fileName}")
         lstLen = len(ftl(fileName))
         userInput = self.inputField.get()
         userInput = userInput.strip()
@@ -240,18 +246,20 @@ class fugenMain:
 
     def saveCont(self, dictEntry): #saves a valid choice into memory, steps forward in program execution. Updates prompts         
         global workingList
+        #d(f"in saveCont\n dictEntry: {dictEntry}\ndictEntry type = {type(dictEntry)}")
         fileName = dictToFileName(dictEntry)
-        choice = self.userChoiceRead(fileName)
+        choice = self.userChoiceRead(dictEntry)
 
         if choice != False: #choice should be str, "", or int. 'False' denotes an error!                        
             if type(choice)== int:
                 choice = intToEntry(fileName, choice) #converts an integer choice into the desired string
-            saveInput(choice)
+            self.saveInput(choice)
             if (self.currentStep == 8):
                 self.finalize()
             else:
                 self.currentStep = self.currentStep + 1
-                showPrompt(dictEntry[workingListHardcoded[self.currentStep]])
+                self.inst(f"Current step is: {self.currentStep}")
+                self.showPrompt(workingListHardcoded[self.currentStep])
                 
         else: 
             self.inst("Something's wrong! saveCont is receiving a false value from userChoiceRead", self.errColour)
@@ -259,7 +267,7 @@ class fugenMain:
             
         #%return choice might not be the best approach. This should be the step that stores values and increments currentStep
     
-    def saveInput(userInput):
+    def saveInput(self, userInput):
         global workingList
         workingList[self.currentStep] = userInput
 
@@ -385,21 +393,28 @@ def makeFooter(footerFile):
     return footer
 
 def ftl(fileName): #extracts file contents into a list
-    with open(f'{fileName}.txt', 'r') as file:
+    with open(f'{fileName}.txt', 'r') as file: 
         allLines = []
         for line in file: 
             allLines.append(line.strip())
         return allLines
 
-def dictToFileName(dictEntry): #takes a dictionary key as argument
-    global allFilesList
+def dictToFileName(inputKey): #takes a dictionary key as argument
+    #d(f"in dictToFileName\n dictEntry: {inputKey}\ndictEntry type = {type(inputKey)}")
+    dictEntry = promptDict[inputKey]
+    d("in DictToFileName")
+    d(f"input key: {inputKey}")
+    d(f"dictionary entry = {dictEntry}")
+    
     if dictEntry[0] == 1: #Since date values are not stored
+        d("\n\nno dateFile found")
         fileName =  ""
     elif dictEntry[0] == 8:
         fileName = allFilesList[2]
     else:
         fileName = allFilesList[dictEntry[0]]
-    return fileName
+    d(f"returning fileName: {fileName}")
+    return (fileName)
 
 def intToEntry(fileName, intChoice):
     fileList = ftl(fileName)
