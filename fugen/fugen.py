@@ -6,7 +6,6 @@ import datetime as dt
 import pyperclip as pp
 import tkinter as tk
 from tkinter import font
-from functools import partial
 
 debug = True
 def d(msg):
@@ -24,6 +23,7 @@ def d(msg):
 bgColour  = "#f1eacf"
 errColour = "#ffad95"
 onColour  = "#7ef191"
+successColour = "#6BF77D"
 defaultButtonColour = "#D9D9D9"
 coloursList = [bgColour, errColour, onColour, defaultButtonColour]
 
@@ -42,6 +42,8 @@ archiveFolder = "Letter_Archive"
 dataFolder = "Data"
 
 
+
+workingListHardcoded = ["Hiring Manager", "Dates", "Jobs", "Identity", "Skills", "Industries", "Companies", "Values", "Titles"] #Used only to reset workingList at the end of the loop
 workingList = ["Hiring Manager", "Dates", "Jobs", "Identity", "Skills", "Industries", "Companies", "Values", "Titles"]
 #                   0               1       2          3          4           5            6           7        8
 
@@ -76,6 +78,8 @@ for element in allFilesList:
         print(f"Created new file: {element}.txt")
         makeFile(element)
 
+#os.chdir(programDirectory)
+
 #           *************************************************************************************************************************
 
 #                                                                            TKINTER CLASSES
@@ -83,7 +87,9 @@ for element in allFilesList:
 #           *************************************************************************************************************************
 class fugenMain:
     def __init__(self, rootIn, bgColour, coloursList):
-        
+        self.currentStep = 0
+        self.emailFinal = ""
+
         bgColour = coloursList[0]
         errColour = coloursList[1]
         onColour = coloursList[2]
@@ -91,6 +97,7 @@ class fugenMain:
 
         self.root = rootIn
         root.title("Follow-up Generator - fugen")
+        self.footer = makeFooter(footerFile)
         if True: #Frames and Formatting
             self.root.geometry('800x650')
             self.root.minsize(400, 450)
@@ -159,10 +166,10 @@ class fugenMain:
         self.prevEntriesList.config(yscrollcommand=self.scrollbar.set)
         self.scrollbar.config(command=self.prevEntriesList.yview) 
 
-        self.instructions.set("instructions")
-        self.promptDisplay.set("promptDisplay")
-        self.promptDetails.set("promptDetails")
-        self.prevEntries.set("This is a previous entry\nAnd this is another")
+        self.instructions.set("instructions go here")
+        self.promptDisplay.set(promptDict[workingListHardcoded[self.currentStep]][2][0]) #currentStep == 0 at program start. Used text for readability
+        self.promptDetails.set(promptDict[workingListHardcoded[self.currentStep]][2][1::])
+        self.prevEntries.set(promptDict[workingListHardcoded[self.currentStep]][1][0::])
 
         #Window-state Variables
         self.pinWindow = tk.BooleanVar()
@@ -176,15 +183,17 @@ class fugenMain:
         self.programEditButton.pack(side="top", fill="x", pady=5) 
         self.setOnTopButton.pack(side="top", fill="x", pady=5) 
 
-        self.nextStepButton = tk.Button(self.root, text="Next Step", command=lambda: self.clickToGatherInput(textBoxContents=self.inputField.get()), padx = 10, pady = 15, borderwidth=5)
+        self.nextStepButton = tk.Button(self.root, text="Next Step", command=lambda: self.saveCont(promptDict[workingListHardcoded[self.currentStep]]), padx = 10, pady = 15, borderwidth=5)
         self.nextStepButton.grid(row=4, rowspan=1, column=0, columnspan=3, sticky="nesw", padx=35, pady=35)
         self.root.bind("<Return>", lambda event: self.nextStepButton.invoke())
        
         self.root.after(100, self.setFocus())
+        
 
     def PIPopup(self): #Creates an instance of personalInfoPopup as a child of root
         parentWindow = tk.Toplevel(self.root)
         personalInfoPopup(parentWindow)
+        self.footer = makeFooter(footerFile)
 
     def changePin(self, event=None):
         buttonStatus=self.pinWindow.get()
@@ -215,7 +224,8 @@ class fugenMain:
         if err == None:                             #Not sure if this is valid, but it's worth a try
             self.instructions.config(bg=bgColour)
 
-    def userChoiceRead(self, fileName): #reads input, bound-checks integers. Outputs int() for a select value, "", or str() as appropriate. Variable return type!
+    def userChoiceRead(self, dictEntry): #reads input, bound-checks integers. Outputs int() for a select value, "", or str() as appropriate. Variable return type!
+        fileName = dictToFileName(dictEntry)
         lstLen = len(ftl(fileName))
         userInput = self.inputField.get()
         userInput = userInput.strip()
@@ -223,7 +233,7 @@ class fugenMain:
         if userInput.isdigit():
             userInput = int(userInput)
             if (userInput) <= lstLen:
-                return userInput
+                return (userInput-1)
             else:
                 inst("ERROR:\nThe value you entered is not within bounds! \nPlease try again.", errColour)
                 inputClear(True) #Passing any value to inputClear() indicates error status, and does not reset the colour in Instructions
@@ -234,14 +244,30 @@ class fugenMain:
             fileAppend(fileName, userInput)
             return userInput
 
-    def choicePick(self, dictEntry):  #Cycles input prompt until a valid entry is recieved
+    def saveCont(self, dictEntry): #saves a valid choice into memory, steps forward in program execution. Updates prompts         
+        global workingList
         fileName = dictToFileName(dictEntry)
-        lst = dictEntry[1] #list of previous entries within the relevant file
-        self.printListToScroll(lst)
-        while True:
-            choice = userChoiceRead(fileName)
-            if choice != False:
-                return choice
+        choice = userChoiceRead(fileName)
+
+        if choice != False: #choice should be str, "", or int. 'False' denotes an error!                        
+            if type(choice)== int:
+                choice = intToEntry(fileName, choice) #converts an integer choice into the desired string
+            saveInput(choice)
+            if (self.currentStep == 8):
+                self.finalize()
+            else:
+                self.currentStep = self.currentStep + 1
+                showPrompt(dictEntry[workingListHardcoded[self.currentStep]])
+                
+        else: 
+            self.inst("Something's wrong! saveCont is receiving a false value from userChoiceRead", errColour)
+            exit() #%dunno how I feel about including an exit statement here
+            
+        #%return choice might not be the best approach. This should be the step that stores values and increments currentStep
+    
+    def saveInput(userInput):
+        global workingList
+        workingList[self.currentStep] = userInput
 
     def showPrompt(self, dictEntry):
         prompt = dictEntry[2][0]
@@ -253,15 +279,41 @@ class fugenMain:
         self.promptDisplay.set(prompt)
         self.promptDetails.set(examples)
 
-    def showChoose(self, dictEntry):
-        #global workingList
-        showPrompt(dictEntry, promptField, detailsField)
-        workingList[dictEntry[0]] = choicePick(scrollBox, dictEntry, inputBox, errBox)
+    def finalize(self):
+        self.buildLetter()
+        self.copyMail()
+        
+    def buildLetter(self):
+        self.emailFinal
+        def messageBody():
+            body = """Hi{},
+        
+        I sent in an application on {} for the advertised role of {}. I wanted to ask if you have had time to review my resume and qualifications, as well as inquire into the status of the hiring process.  
 
-    def exitButton(self, event=None):
-        root.quit()
+        My combination of experience, skill, and genuine enthusiasm for the position make me a strong candidate. As {}, I carry {} that uniquely positions me to {}.  
 
-    def programSettingsInput(self):
+        Drawn to {} because of your {}, I wanted to re-express my interest in joining your team. I appreciate any information you are able to provide regarding my application, and cordially state my availability for an interview.  
+
+        I have re-attached my resume for your convenience.
+
+        Looking forward to hearing from you! """
+            return body
+        emailBody = messageBody()
+        self.emailFinal = (emailBody.format(*workingList)) + "\n\n" + self.footer
+
+    def copyMail(self): #saves letter, copies it, and resets program to start
+        pp.copy(self.emailFinal)
+        inst("Follow-up email generated!\nIt's been copied into your computer's memory.\nPress ctrl+v / cmd+v to paste it :)", successColour)
+        os.chdir(archiveDir)
+        with open(f"Reply - {workingList[2]} - {workingList[6]}.txt", "w") as file:
+            file.write(fullEmail)
+        os.chdir(dataDir)
+        workingList = workingListHardcoded
+        self.currentStep = 0
+        # fakeList = [self.emailFinal]
+        # self.printListToScroll(fakeList)
+
+    def programSettingsInput(self):     #%NOT DONE!
         #add, remove, edit entries from lists
         #change backgrounds?
         pass
@@ -305,6 +357,7 @@ class personalInfoPopup:
         self.personalInfo[1] = self.email.get()
         self.personalInfo[2] = self.phoneNumber.get()
         writeToFile(footerFile, self.personalInfo)
+        
         self.popup.destroy()
         
 
@@ -354,7 +407,10 @@ def dictToFileName(dictEntry): #takes a dictionary key as argument
         fileName = allFilesList[dictEntry[0]]
     return fileName
 
-footer = makeFooter(footerFile)
+def intToEntry(fileName, intChoice):
+    fileList = ftl(fileName)
+    choice = intChoice
+    return fileList[choice]
 
 
 #           *************************************************************************************************************************
@@ -433,21 +489,7 @@ if True:
                             ]
     }
 
-    def messageBody():
-        body = """Hi{},
-    
-    I sent in an application on {} for the advertised role of {}. I wanted to ask if you have had time to review my resume and qualifications, as well as inquire into the status of the hiring process.  
 
-    My combination of experience, skill, and genuine enthusiasm for the position make me a strong candidate. As {}, I carry {} that uniquely positions me to {}.  
-
-    Drawn to {} because of your {}, I wanted to re-express my interest in joining your team. I appreciate any information you are able to provide regarding my application, and cordially state my availability for an interview.  
-
-    I have re-attached my resume for your convenience.
-
-    Looking forward to hearing from you! """
-        return body
-
-emailBody = messageBody()
 
 #           *************************************************************************************************************************
 
@@ -460,19 +502,4 @@ app = fugenMain(root)
 root.mainloop()
 
 
-for val in promptDict:
-    showChoose(val, prevEntries, inputField, instructions, promptDisplay, promptDetails) #How does the 'next step' button fit in?
-
-bodyFormatted = emailBody.format(tuple(workingList))
-fullEmail = bodyFormatted + "\n\n" + footer
-
-# print("Current letter is: \n")
-# print(fullEmail + "\n\n")
-
-os.chdir(programDirectory)
-os.chdir(archiveFolder)
-with open(f"Reply - {jobTitle} - {companyName}.txt", "w") as file:
-    file.write(fullEmail)
-
-os.chdir(programDirectory)
 pp.copy(fullEmail)
