@@ -6,6 +6,7 @@ import datetime as dt
 import pyperclip as pp
 import tkinter as tk
 from tkinter import font
+from functools import partial
 
 debug = True
 def d(msg):
@@ -24,6 +25,7 @@ bgColour  = "#f1eacf"
 errColour = "#ffad95"
 onColour  = "#7ef191"
 defaultButtonColour = "#D9D9D9"
+coloursList = [bgColour, errColour, onColour, defaultButtonColour]
 
 #File Names:    ----------------------------------------------------------------------
 hiringManagerFile = "Hiring_Managers"
@@ -76,81 +78,243 @@ for element in allFilesList:
 
 #           *************************************************************************************************************************
 
-#                                                                            GUI FUNCTIONS
+#                                                                            TKINTER CLASSES
 
 #           *************************************************************************************************************************
+class fugenMain:
+    def __init__(self, rootIn, bgColour, coloursList):
+        
+        bgColour = coloursList[0]
+        errColour = coloursList[1]
+        onColour = coloursList[2]
+        defaultButtonColour = coloursList[3]
 
-def setFocus():
-    inputField.focus_force()
+        self.root = rootIn
+        root.title("Follow-up Generator - fugen")
+        if True: #Frames and Formatting
+            self.root.geometry('800x650')
+            self.root.minsize(400, 450)
+            self.root.configure(bg=self.bgColour)
 
-def changePin(event=None):
-    buttonStatus=pinWindow.get()
-    if buttonStatus == True:
-        root.attributes("-topmost", 1)
-        setOnTopButton.config(bg=onColour, bd=5, relief="sunken")
-    elif buttonStatus == False:
-        root.attributes("-topmost", 0)
-        setOnTopButton.config(bg=defaultButtonColour, bd=0, relief="flat")
+            #Grid and Frame Setups
+            buttonFrame = tk.Frame(self.root)
+            buttonFrame.grid(row=0, column=2, rowspan=2, sticky="news", padx=20, pady=(25, 10))
+            buttonFrame.configure(bg=self.bgColour)
+            buttonFrame.rowconfigure(0, weight=0)
 
-def runProgram():
-    pass
+            promptFrame = tk.Frame(self.root)
+            promptFrame.grid(row=1, column=0, columnspan=3, sticky="nsew", padx=40, pady=10)
+            promptFrame.configure(bg=bgColour)
 
-def nextStep():
-    print("exiting...")
-    exit()
+            entriesFrame = tk.Frame(self.root)
+            entriesFrame.grid(row=2, column=0, columnspan=3, sticky="nsew", padx=20, pady=10)
+            entriesFrame.columnconfigure(0, weight=1)
+            entriesFrame.rowconfigure(0, weight=1)  
 
-def exitButton(event=None):
-    root.quit()
+            textFrame = tk.Frame(self.root)
+            textFrame.grid(row=3, column=0, columnspan=3, sticky="nesw", padx=20, pady=(5,10))
+            textFrame.rowconfigure(0, weight=1)
+            textFrame.columnconfigure(0,weight=1)
 
-#           *************************************************************************************************************************
+            self.root.grid_columnconfigure(0, weight=2)              
+            self.root.grid_columnconfigure(1, weight=1)              
+            self.root.grid_columnconfigure(2, weight=1)   
 
-#                                                                            BACK-END FUNCTIONS
+            self.root.grid_rowconfigure(0, weight=1)                 #Instructions; buttonFrame
+            self.root.grid_rowconfigure(1, weight=0)                 #promptFrame
+            self.root.grid_rowconfigure(2, weight=0)                 #Previous Entries (scrollList)
+            self.root.grid_rowconfigure(3, weight=0, minsize=100)    #text entry 
+            self.root.grid_rowconfigure(4, weight=0, minsize=150)    #step button
 
-#           *************************************************************************************************************************
-def inst(message, mood=None):   #instructions. Mood sets the background colour. Note! It does not reset it afterwards
-    instructions.set(message)
-    if mood != None:
-        instructions.config(bg=mood)
+        # Text input field
+        self.inputField = tk.Entry(self.textFrame, relief="sunken", justify="center")
+        self.inputField.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
 
-def personalInfoInput():
-    popup = tk.Toplevel(root)
-    popup.title("Personal Info")
+        # Text output fields 
+        self.instructions = tk.StringVar()
+        self.promptDisplay = tk.StringVar()
+        self.promptDetails = tk.StringVar()
+        self.prevEntries = tk.StringVar()
+
+        #Output field display labels
+        self.instructionsCell = tk.Label(self.root, textvariable=self.instructions, relief="sunken", bd=2, wraplength=400)
+        self.instructionsCell.grid(row=0, column=0, columnspan=2, sticky="nwse", padx=20, pady=(30,10))
+
+        self.promptDisplayCell = tk.Label(self.promptFrame, textvariable=self.promptDisplay)
+        self.promptDisplayCell.grid(row=0, sticky="nsew", padx=100, pady=10)
+        boldFont = font.Font(weight="bold")
+        self.promptDisplayCell.config(font=boldFont)
+
+        self.promptDetailsCell = tk.Label(self.promptFrame, textvariable=self.promptDetails)
+        self.promptDetailsCell.grid(row=1, sticky="nsew", padx=100, pady=10)
+
+        self.root.update_idletasks()  # Update the layout
+        self.promptDisplayCell.config(wraplength=self.promptFrame.winfo_width() - 120) 
+        self.promptDetailsCell.config(wraplength=self.promptFrame.winfo_width() - 120) 
+
+        self.prevEntriesList = tk.Listbox(self.entriesFrame, height =5)
+        self.prevEntriesList.grid(row=0, column=0, sticky="nsew")
+        self.scrollbar = tk.Scrollbar(self.entriesFrame)
+        self.scrollbar.grid(row=0, column=1, sticky='ns')
+        self.prevEntriesList.config(yscrollcommand=self.scrollbar.set)
+        self.scrollbar.config(command=self.prevEntriesList.yview) 
+
+        self.instructions.set("instructions")
+        self.promptDisplay.set("promptDisplay")
+        self.promptDetails.set("promptDetails")
+        self.prevEntries.set("This is a previous entry\nAnd this is another")
+
+        #Window-state Variables
+        self.pinWindow = tk.BooleanVar()
+
+        #Button definitions
+        self.infoEditButton = tk.Button(self.buttonFrame, text="Edit Personal Information", command=self.PIPopup, padx = 5, pady = 5)
+        self.programEditButton = tk.Button(self.buttonFrame, text="Edit Program Settings", command=self.programSettingsInput, padx = 5, pady = 5)
+        self.setOnTopButton = tk.Checkbutton(self.buttonFrame, text="Fix Window on screen", command=self.changePin, padx = 5, pady = 5, variable=self.pinWindow, onvalue=True, offvalue=False)
+
+        self.infoEditButton.pack(side="top", fill="x", pady=5) 
+        self.programEditButton.pack(side="top", fill="x", pady=5) 
+        self.setOnTopButton.pack(side="top", fill="x", pady=5) 
+
+        self.nextStepButton = tk.Button(self.root, text="Next Step", command=lambda: self.clickToGatherInput(textBoxContents=self.inputField.get()), padx = 10, pady = 15, borderwidth=5)
+        self.nextStepButton.grid(row=4, rowspan=1, column=0, columnspan=3, sticky="nesw", padx=35, pady=35)
+        self.root.bind("<Return>", lambda event: self.nextStepButton.invoke())
+       
+        self.root.after(100, self.setFocus())
+
+    def PIPopup(self): #Creates an instance of personalInfoPopup as a child of root
+        parentWindow = tk.Toplevel(self.root)
+        personalInfoPopup(parentWindow)
+
+    def changePin(self, event=None):
+        buttonStatus=self.pinWindow.get()
+        if buttonStatus == True:
+            self.root.attributes("-topmost", 1)
+            self.setOnTopButton.config(bg=self.onColour, bd=5, relief="sunken")
+        elif buttonStatus == False:
+            root.attributes("-topmost", 0)
+            self.setOnTopButton.config(bg=self.defaultButtonColour, bd=0, relief="flat")
+
+    def setFocus(self):
+        self.inputField.focus_force()
+
+    def inst(self, message, mood=None):   #instructions. Mood sets the background colour. Note! It does not reset it afterwards
+        self.instructions.set(message)
+        if mood != None:
+            self.instructions.config(bg=mood)
+
+    def printListToScroll(self, lst):
+        self.inputClear()
+        count = 0
+        for element in lst:
+            self.prevEntries.insert(tk.END, f"{count}\t- {element} \n")
+            count += 1
     
-    # Variables to store the input from the text fields
-    name = tk.StringVar()
-    email = tk.StringVar()
-    phoneNumber = tk.StringVar()
+    def inputClear(self, err=None): 
+        self.inputField.delete(0, tk.END)
+        if err == None:                             #Not sure if this is valid, but it's worth a try
+            self.instructions.config(bg=bgColour)
 
-    #Input Fields
-    nameLabel = tk.Label(popup, text="Full Name:")
-    nameLabel.grid(row=0, column=0, padx=10, pady=5)
-    firstInput = tk.Entry(popup, textvariable=name)
-    firstInput.grid(row=0, column=1, padx=10, pady=5)
-    firstInput.focus_set()
+    def userChoiceRead(self, fileName): #reads input, bound-checks integers. Outputs int() for a select value, "", or str() as appropriate. Variable return type!
+        lstLen = len(ftl(fileName))
+        userInput = self.inputField.get()
+        userInput = userInput.strip()
 
-    emailLabel = tk.Label(popup, text="Email:")
-    emailLabel.grid(row=1, column=0, padx=10, pady=5)
-    secondInput = tk.Entry(popup, textvariable=email)
-    secondInput.grid(row=1, column=1, padx=10, pady=5)
+        if userInput.isdigit():
+            userInput = int(userInput)
+            if (userInput) <= lstLen:
+                return userInput
+            else:
+                inst("ERROR:\nThe value you entered is not within bounds! \nPlease try again.", errColour)
+                inputClear(True) #Passing any value to inputClear() indicates error status, and does not reset the colour in Instructions
+                return False
+        elif userInput == "":
+            return userInput 
+        else: #Custom/new user entry
+            fileAppend(fileName, userInput)
+            return userInput
 
-    phoneNumberLabel = tk.Label(popup, text="Phone Number:")
-    phoneNumberLabel.grid(row=2, column=0, padx=10, pady=5)
-    thirdInput = tk.Entry(popup, textvariable=phoneNumber)
-    thirdInput.grid(row=2, column=1, padx=10, pady=5)
+    def choicePick(self, dictEntry):  #Cycles input prompt until a valid entry is recieved
+        fileName = dictToFileName(dictEntry)
+        lst = dictEntry[1] #list of previous entries within the relevant file
+        self.printListToScroll(lst)
+        while True:
+            choice = userChoiceRead(fileName)
+            if choice != False:
+                return choice
+
+    def showPrompt(self, dictEntry):
+        prompt = dictEntry[2][0]
+        examples = "\n".join(dictEntry[2][1::])
+
+        if len(dictEntry) >= 4: #if a substitution list exists in the Dictionary
+            examples = examples.format(tuple(dictEntry[3]))
+
+        self.promptDisplay.set(prompt)
+        self.promptDetails.set(examples)
+
+    def showChoose(self, dictEntry):
+        #global workingList
+        showPrompt(dictEntry, promptField, detailsField)
+        workingList[dictEntry[0]] = choicePick(scrollBox, dictEntry, inputBox, errBox)
+
+    def exitButton(self, event=None):
+        root.quit()
+
+    def programSettingsInput(self):
+        #add, remove, edit entries from lists
+        #change backgrounds?
+        pass
+
+class personalInfoPopup:
+    def __init__(self, root):
+        self.popup = root
+        self.popup.title("Personal Info")
+        
+        # Variables to store the input from the text fields
+        self.name = tk.StringVar()
+        self.email = tk.StringVar()
+        self.phoneNumber = tk.StringVar()
+
+        #Input Fields
+        nameLabel = tk.Label(self.popup, text="Full Name:")
+        nameLabel.grid(row=0, column=0, padx=10, pady=5)
+        firstInput = tk.Entry(self.popup, textvariable=self.name)
+        firstInput.grid(row=0, column=1, padx=10, pady=5)
+        firstInput.focus_set()
+
+        emailLabel = tk.Label(self.popup, text="Email:")
+        emailLabel.grid(row=1, column=0, padx=10, pady=5)
+        secondInput = tk.Entry(self.popup, textvariable=self.email)
+        secondInput.grid(row=1, column=1, padx=10, pady=5)
+
+        phoneNumberLabel = tk.Label(self.popup, text="Phone Number:")
+        phoneNumberLabel.grid(row=2, column=0, padx=10, pady=5)
+        thirdInput = tk.Entry(self.popup, textvariable=self.phoneNumber)
+        thirdInput.grid(row=2, column=1, padx=10, pady=5)
+
+            #Save/Close Button
+        saveButton = tk.Button(self.popup, text="Save", command=self.saveClose)
+        saveButton.grid(row=3, columnspan=2, padx=10, pady=10)
+        self.popup.bind("<Return>", self.saveClose)
 
 
-    def saveClose(event=None):
-        personalInfo = ["Name", "Email", "Phone Number"]
-        personalInfo[0] = name.get()
-        personalInfo[1] = email.get()
-        personalInfo[2] = phoneNumber.get()
-        popup.destroy()
-        writeToFile(footerFile, personalInfo)
+    def saveClose(self, event=None):
+        self.personalInfo = ["Name", "Email", "Phone Number"]
+        self.personalInfo[0] = self.name.get()
+        self.personalInfo[1] = self.email.get()
+        self.personalInfo[2] = self.phoneNumber.get()
+        writeToFile(footerFile, self.personalInfo)
+        self.popup.destroy()
+        
 
-    #Save/Close Button
-    saveButton = tk.Button(popup, text="Save", command=saveClose)
-    saveButton.grid(row=3, columnspan=2, padx=10, pady=10)
-    popup.bind("<Return>", saveClose)
+
+        
+#           *************************************************************************************************************************
+
+#                                                                            FILE-HANDLING FUNCTIONS
+
+#           *************************************************************************************************************************
 
 def writeToFile(fileName, lst):
     with open(f'{fileName}.txt', 'w') as file:
@@ -158,46 +322,11 @@ def writeToFile(fileName, lst):
             print(element)
             file.write(f"{element}\n")
 
-def fileAppend(fileName, lst):
+def fileAppend(fileName, val):
     with open(f'{fileName}.txt', 'a') as file:
-        for element in lst:
-            file.write(f"{element}\n")
+        file.write(f"{val}\n")          #%is it known that append does not include newlines by default?
 
-def printListToScroll(scrollBox, lst):
-    scrollBox.delete("1.0", tk.END)
-
-    count = 0
-    for element in lst:
-        scrollBox.insert(tk.END, f"{count} - {element} \n")
-        count += 1
-
-def userChoiceRead(inputBox, errBox, fileName):
-    lst = ftl(fileName)
-    userInput = inputBox.get()
-    userInput = userInput.strip()
-
-    if userInput.isdigit():
-        if (int(userInput)) <= len(lst):
-            output = lst[int(userInput)-1]
-            inputBox.delete(0, tk.END)
-            errBox.config(bg=bgColour)
-            return output
-        else:
-            errBox.config(bg=errColour)
-            errBox.set("ERROR:\nInput not recognized! Please try again:\n")
-            userChoiceRead(inputBox, errBox, fileName)                      #this should be bound to a buttonPress
-    elif userInput == "":
-         errBox.config(bg=bgColour)
-         return "" 
-    else:
-        tempList = []
-        tempList.append(userInput)
-        fileAppend(fileName, tempList)
-        inputBox.delete(0, tk.END)
-        errBox.config(bg=bgColour)
-        return userInput
-
-def makeFooter ():
+def makeFooter(footerFile):
     footerList = ftl(footerFile)
     footer = ""
     count = 0
@@ -215,31 +344,9 @@ def ftl(fileName): #extracts file contents into a list
             allLines.append(line.strip())
         return allLines
 
-def choicePick(scrollBox, dictEntry, inputBox, errBox):  #Prompts user, and returns the string corresponding to the user's choice
-    fileName = dictToFileName(dictEntry)
-    lst = dictEntry[1]
-    printListToScroll(scrollBox, lst)
-    choice = userChoiceRead(inputBox, errBox, fileName)
-    return choice
-
-def showPrompt(dictEntry, promptField, detailsField):
-    prompt = dictEntry[2][0]
-    examples = "\n".join(dictEntry[2][1::])
-
-    if len(dictEntry) <= 4: #if a substitution list exists in the Dictionary
-        examples.format(tuple(dictEntry[3]))
-
-    promptField.set(prompt)
-    detailsField.set(examples)
-
-def showChoose(dictEntry, scrollBox, inputBox, errBox, promptField, detailsField):
-    global workingList
-    showPrompt(dictEntry, promptField, detailsField)
-    workingList[dictEntry[0]] = choicePick(scrollBox, dictEntry, inputBox, errBox)
-
-def dictToFileName(dictEntry):
+def dictToFileName(dictEntry): #takes a dictionary key as argument
     global allFilesList
-    if dictEntry[0] == 1:
+    if dictEntry[0] == 1: #Since date values are not stored
         fileName =  ""
     elif dictEntry[0] == 8:
         fileName = allFilesList[2]
@@ -247,21 +354,16 @@ def dictToFileName(dictEntry):
         fileName = allFilesList[dictEntry[0]]
     return fileName
 
-def programSettingsInput():
-    #add, remove, edit entries from lists
-    #change backgrounds?
-    pass
+footer = makeFooter(footerFile)
 
 
 #           *************************************************************************************************************************
 
-#                                                                            DICTIONARY: PROMPTS, MESSAGE BODY
+#                                                                            DICTIONARY AND MESSAGE BODY
 
 #           *************************************************************************************************************************
 if True:
     dates = [(dt.datetime.now() - dt.timedelta(days=10)).strftime("%B %d"), (dt.datetime.now() - dt.timedelta(days=7)).strftime("%B %d")]
-
-    
 
     #The formatting for promptDict is a little messy. I'll break it down:
     #The dictionary associates each variable (string-named) with a list of lists:
@@ -345,105 +447,7 @@ if True:
     Looking forward to hearing from you! """
         return body
 
-
-#           *************************************************************************************************************************
-
-#                                                                            GUI FORMATTING
-
-#           *************************************************************************************************************************
-if True:
-    if True: #Frames and Formatting
-        root = tk.Tk()
-        root.title("Follow-up Generator - fugen")
-        root.geometry('800x650')
-        root.minsize(400, 450)
-        root.configure(bg=bgColour)
-
-        #Grid and Frame Setups
-        buttonFrame = tk.Frame(root)
-        buttonFrame.grid(row=0, column=2, rowspan=2, sticky="news", padx=20, pady=(25, 10))
-        buttonFrame.configure(bg=bgColour)
-        buttonFrame.rowconfigure(0, weight=0)
-
-        promptFrame = tk.Frame(root)
-        promptFrame.grid(row=1, column=0, columnspan=3, sticky="nsew", padx=40, pady=10)
-        promptFrame.configure(bg=bgColour)
-
-        entriesFrame = tk.Frame(root)
-        entriesFrame.grid(row=2, column=0, columnspan=3, sticky="nsew", padx=20, pady=10)
-        entriesFrame.columnconfigure(0, weight=1)
-        entriesFrame.rowconfigure(0, weight=1)  
-
-        textFrame = tk.Frame(root)
-        textFrame.grid(row=3, column=0, columnspan=3, sticky="nesw", padx=20, pady=(5,10))
-        textFrame.rowconfigure(0, weight=1)
-        textFrame.columnconfigure(0,weight=1)
-
-        root.grid_columnconfigure(0, weight=2)              
-        root.grid_columnconfigure(1, weight=1)              
-        root.grid_columnconfigure(2, weight=1)   
-
-        root.grid_rowconfigure(0, weight=1)                 #Instructions; buttonFrame
-        root.grid_rowconfigure(1, weight=0)                 #promptFrame
-        root.grid_rowconfigure(2, weight=0)                 #Previous Entries (scrollList)
-        root.grid_rowconfigure(3, weight=0, minsize=100)    #text entry 
-        root.grid_rowconfigure(4, weight=0, minsize=150)    #step button
-
-    # Text input field
-    inputField = tk.Entry(textFrame, relief="sunken", justify="center")
-    inputField.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
-
-    root.bind("<Return>", exitButton)
-    root.after(100, setFocus())
-
-    # Text output fields 
-    instructions = tk.StringVar()
-    promptDisplay = tk.StringVar()
-    promptDetails = tk.StringVar()
-    prevEntries = tk.StringVar()
-
-    #Output field display labels
-    instructionsCell = tk.Label(root, textvariable=instructions, relief="sunken", bd=2, wraplength=400)
-    instructionsCell.grid(row=0, column=0, columnspan=2, sticky="nwse", padx=20, pady=(30,10))
-
-    promptDisplayCell = tk.Label(promptFrame, textvariable=promptDisplay)
-    promptDisplayCell.grid(row=0, sticky="nsew", padx=100, pady=10)
-    boldFont = font.Font(weight="bold")
-    promptDisplayCell.config(font=boldFont)
-
-    promptDetailsCell = tk.Label(promptFrame, textvariable=promptDetails)
-    promptDetailsCell.grid(row=1, sticky="nsew", padx=100, pady=10)
-
-    root.update_idletasks()  # Update the layout
-    promptDisplayCell.config(wraplength=promptFrame.winfo_width() - 120) 
-    promptDetailsCell.config(wraplength=promptFrame.winfo_width() - 120) 
-
-    prevEntriesList = tk.Listbox(entriesFrame, height =5)
-    prevEntriesList.grid(row=0, column=0, sticky="nsew")
-    scrollbar = tk.Scrollbar(entriesFrame)
-    scrollbar.grid(row=0, column=1, sticky='ns')
-    prevEntriesList.config(yscrollcommand=scrollbar.set)
-    scrollbar.config(command=prevEntriesList.yview) 
-
-    instructions.set("instructions")
-    promptDisplay.set("promptDisplay")
-    promptDetails.set("promptDetails")
-    prevEntries.set("prevEntries")
-
-    #Button Variables
-    pinWindow = tk.BooleanVar()
-
-    #Button definitions
-    infoEditButton = tk.Button(buttonFrame, text="Edit Personal Information", command=personalInfoInput, padx = 5, pady = 5)
-    programEditButton = tk.Button(buttonFrame, text="Edit Program Settings", command=programSettingsInput, padx = 5, pady = 5)
-    setOnTopButton = tk.Checkbutton(buttonFrame, text="Fix Window on screen", command=changePin, padx = 5, pady = 5, variable=pinWindow, onvalue=True, offvalue=False)
-
-    nextStepButton = tk.Button(root, text="Next Step", command=nextStep, padx = 10, pady = 15, borderwidth=5)
-    nextStepButton.grid(row=4, rowspan=1, column=0, columnspan=3, sticky="nesw", padx=35, pady=35)
-
-    infoEditButton.pack(side="top", fill="x", pady=5) 
-    programEditButton.pack(side="top", fill="x", pady=5) 
-    setOnTopButton.pack(side="top", fill="x", pady=5) 
+emailBody = messageBody()
 
 #           *************************************************************************************************************************
 
@@ -451,9 +455,10 @@ if True:
 
 #           *************************************************************************************************************************
 
+root = tk.Tk()
+app = fugenMain(root)
 root.mainloop()
-footer = makeFooter()
-emailBody = messageBody()
+
 
 for val in promptDict:
     showChoose(val, prevEntries, inputField, instructions, promptDisplay, promptDetails) #How does the 'next step' button fit in?
