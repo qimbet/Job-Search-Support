@@ -19,14 +19,6 @@ def d(msg):
 
 #           *************************************************************************************************************************
 
-#Colours
-bgColour  = "#f1eacf"
-errColour = "#ffad95"
-onColour  = "#7ef191"
-successColour = "#6BF77D"
-defaultButtonColour = "#D9D9D9"
-coloursList = [bgColour, errColour, onColour, defaultButtonColour]
-
 #File Names:    ----------------------------------------------------------------------
 hiringManagerFile = "Hiring_Managers"
 footerFile = "Personal_Info"
@@ -86,14 +78,16 @@ for element in allFilesList:
 
 #           *************************************************************************************************************************
 class fugenMain:
-    def __init__(self, rootIn, bgColour, coloursList):
+    def __init__(self, rootIn):
         self.currentStep = 0
         self.emailFinal = ""
 
-        bgColour = coloursList[0]
-        errColour = coloursList[1]
-        onColour = coloursList[2]
-        defaultButtonColour = coloursList[3]
+        #Colours
+        self.bgColour  = "#f1eacf"
+        self.errColour = "#ffad95"
+        self.onColour  = "#7ef191"
+        self.successColour = "#6BF77D"
+        self.defaultButtonColour = "#D9D9D9"
 
         self.root = rootIn
         root.title("Follow-up Generator - fugen")
@@ -111,7 +105,7 @@ class fugenMain:
 
             promptFrame = tk.Frame(self.root)
             promptFrame.grid(row=1, column=0, columnspan=3, sticky="nsew", padx=40, pady=10)
-            promptFrame.configure(bg=bgColour)
+            promptFrame.configure(bg=self.bgColour)
 
             entriesFrame = tk.Frame(self.root)
             entriesFrame.grid(row=2, column=0, columnspan=3, sticky="nsew", padx=20, pady=10)
@@ -134,7 +128,7 @@ class fugenMain:
             self.root.grid_rowconfigure(4, weight=0, minsize=150)    #step button
 
         # Text input field
-        self.inputField = tk.Entry(self.textFrame, relief="sunken", justify="center")
+        self.inputField = tk.Entry(textFrame, relief="sunken", justify="center")
         self.inputField.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
 
         # Text output fields 
@@ -147,21 +141,21 @@ class fugenMain:
         self.instructionsCell = tk.Label(self.root, textvariable=self.instructions, relief="sunken", bd=2, wraplength=400)
         self.instructionsCell.grid(row=0, column=0, columnspan=2, sticky="nwse", padx=20, pady=(30,10))
 
-        self.promptDisplayCell = tk.Label(self.promptFrame, textvariable=self.promptDisplay)
+        self.promptDisplayCell = tk.Label(promptFrame, textvariable=self.promptDisplay)
         self.promptDisplayCell.grid(row=0, sticky="nsew", padx=100, pady=10)
         boldFont = font.Font(weight="bold")
         self.promptDisplayCell.config(font=boldFont)
 
-        self.promptDetailsCell = tk.Label(self.promptFrame, textvariable=self.promptDetails)
+        self.promptDetailsCell = tk.Label(promptFrame, textvariable=self.promptDetails)
         self.promptDetailsCell.grid(row=1, sticky="nsew", padx=100, pady=10)
 
         self.root.update_idletasks()  # Update the layout
-        self.promptDisplayCell.config(wraplength=self.promptFrame.winfo_width() - 120) 
-        self.promptDetailsCell.config(wraplength=self.promptFrame.winfo_width() - 120) 
+        self.promptDisplayCell.config(wraplength=promptFrame.winfo_width() - 120) 
+        self.promptDetailsCell.config(wraplength=promptFrame.winfo_width() - 120) 
 
-        self.prevEntriesList = tk.Listbox(self.entriesFrame, height =5)
+        self.prevEntriesList = tk.Listbox(entriesFrame, height =5)
         self.prevEntriesList.grid(row=0, column=0, sticky="nsew")
-        self.scrollbar = tk.Scrollbar(self.entriesFrame)
+        self.scrollbar = tk.Scrollbar(entriesFrame)
         self.scrollbar.grid(row=0, column=1, sticky='ns')
         self.prevEntriesList.config(yscrollcommand=self.scrollbar.set)
         self.scrollbar.config(command=self.prevEntriesList.yview) 
@@ -175,9 +169,9 @@ class fugenMain:
         self.pinWindow = tk.BooleanVar()
 
         #Button definitions
-        self.infoEditButton = tk.Button(self.buttonFrame, text="Edit Personal Information", command=self.PIPopup, padx = 5, pady = 5)
-        self.programEditButton = tk.Button(self.buttonFrame, text="Edit Program Settings", command=self.programSettingsInput, padx = 5, pady = 5)
-        self.setOnTopButton = tk.Checkbutton(self.buttonFrame, text="Fix Window on screen", command=self.changePin, padx = 5, pady = 5, variable=self.pinWindow, onvalue=True, offvalue=False)
+        self.infoEditButton = tk.Button(buttonFrame, text="Edit Personal Information", command=self.PIPopup, padx = 5, pady = 5)
+        self.programEditButton = tk.Button(buttonFrame, text="Edit Program Settings", command=self.programSettingsInput, padx = 5, pady = 5)
+        self.setOnTopButton = tk.Checkbutton(buttonFrame, text="Fix Window on screen", command=self.changePin, padx = 5, pady = 5, variable=self.pinWindow, onvalue=True, offvalue=False)
 
         self.infoEditButton.pack(side="top", fill="x", pady=5) 
         self.programEditButton.pack(side="top", fill="x", pady=5) 
@@ -222,7 +216,7 @@ class fugenMain:
     def inputClear(self, err=None): 
         self.inputField.delete(0, tk.END)
         if err == None:                             #Not sure if this is valid, but it's worth a try
-            self.instructions.config(bg=bgColour)
+            self.instructions.config(bg=self.bgColour)
 
     def userChoiceRead(self, dictEntry): #reads input, bound-checks integers. Outputs int() for a select value, "", or str() as appropriate. Variable return type!
         fileName = dictToFileName(dictEntry)
@@ -235,7 +229,7 @@ class fugenMain:
             if (userInput) <= lstLen:
                 return (userInput-1)
             else:
-                inst("ERROR:\nThe value you entered is not within bounds! \nPlease try again.", errColour)
+                inst("ERROR:\nThe value you entered is not within bounds! \nPlease try again.", self.errColour)
                 inputClear(True) #Passing any value to inputClear() indicates error status, and does not reset the colour in Instructions
                 return False
         elif userInput == "":
@@ -247,7 +241,7 @@ class fugenMain:
     def saveCont(self, dictEntry): #saves a valid choice into memory, steps forward in program execution. Updates prompts         
         global workingList
         fileName = dictToFileName(dictEntry)
-        choice = userChoiceRead(fileName)
+        choice = self.userChoiceRead(fileName)
 
         if choice != False: #choice should be str, "", or int. 'False' denotes an error!                        
             if type(choice)== int:
@@ -260,7 +254,7 @@ class fugenMain:
                 showPrompt(dictEntry[workingListHardcoded[self.currentStep]])
                 
         else: 
-            self.inst("Something's wrong! saveCont is receiving a false value from userChoiceRead", errColour)
+            self.inst("Something's wrong! saveCont is receiving a false value from userChoiceRead", self.errColour)
             exit() #%dunno how I feel about including an exit statement here
             
         #%return choice might not be the best approach. This should be the step that stores values and increments currentStep
@@ -303,7 +297,7 @@ class fugenMain:
 
     def copyMail(self): #saves letter, copies it, and resets program to start
         pp.copy(self.emailFinal)
-        inst("Follow-up email generated!\nIt's been copied into your computer's memory.\nPress ctrl+v / cmd+v to paste it :)", successColour)
+        inst("Follow-up email generated!\nIt's been copied into your computer's memory.\nPress ctrl+v / cmd+v to paste it :)", self.successColour)
         os.chdir(archiveDir)
         with open(f"Reply - {workingList[2]} - {workingList[6]}.txt", "w") as file:
             file.write(fullEmail)
@@ -500,6 +494,3 @@ if True:
 root = tk.Tk()
 app = fugenMain(root)
 root.mainloop()
-
-
-pp.copy(fullEmail)
