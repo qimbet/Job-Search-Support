@@ -1,9 +1,3 @@
-valtest
-test
-test
-test
-test
-ok
-ok
-ok
-test
+John Doe
+test1
+t2

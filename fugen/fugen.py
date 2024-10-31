@@ -28,6 +28,7 @@ skillsFile = "Skills"
 industriesFile = "Industries"
 companiesFile = "Companies"
 valuesFile = "Values"
+dateFile = "Dates"
 
 #Folder Names
 archiveFolder = "Letter_Archive"
@@ -39,7 +40,7 @@ workingListHardcoded = ["Hiring Manager", "Dates", "Jobs", "Identity", "Skills",
 workingList = ["Hiring Manager", "Dates", "Jobs", "Identity", "Skills", "Industries", "Companies", "Values", "Titles"]
 #                   0               1       2          3          4           5            6           7        8
 
-allFilesList = [hiringManagerFile, footerFile, jobFile, identityFile, skillsFile, industriesFile, companiesFile, valuesFile]
+allFilesList = [hiringManagerFile, footerFile, jobFile, identityFile, skillsFile, industriesFile, companiesFile, valuesFile, dateFile]
 #                   0                  1          2           3           4             5                6           7      
 
 
@@ -49,7 +50,7 @@ d('PROGRAM START')
 
 def makeFile(fileName):
     with open(f"{fileName}.txt", "a") as file:
-        file.write("val")
+        file.write("")
 
 if not os.path.exists(archiveFolder):
     os.makedirs(archiveFolder)
@@ -135,7 +136,7 @@ class fugenMain:
         self.instructions = tk.StringVar()
         self.promptDisplay = tk.StringVar()
         self.promptDetails = tk.StringVar()
-        self.prevEntries = tk.StringVar()
+        #3 self.prevEntries = tk.StringVar()
 
         #Output field display labels
         self.instructionsCell = tk.Label(self.root, textvariable=self.instructions, relief="sunken", bd=2, wraplength=400)
@@ -160,11 +161,11 @@ class fugenMain:
         self.prevEntriesList.config(yscrollcommand=self.scrollbar.set)
         self.scrollbar.config(command=self.prevEntriesList.yview) 
 
-        self.instructions.set("instructions go here")
+        self.inst("instructions go here", self.successColour)
         self.promptDisplay.set(promptDict[workingListHardcoded[self.currentStep]][2][0]) #currentStep == 0 at program start. Used text for readability
         self.promptDetails.set(promptDict[workingListHardcoded[self.currentStep]][2][1::])
-        self.prevEntries.set(promptDict[workingListHardcoded[self.currentStep]][1][0::])
-
+        self.printListToScroll(promptDict[workingListHardcoded[self.currentStep]][1][0::])
+        
         #Window-state Variables
         self.pinWindow = tk.BooleanVar()
 
@@ -177,10 +178,6 @@ class fugenMain:
         self.programEditButton.pack(side="top", fill="x", pady=5) 
         self.setOnTopButton.pack(side="top", fill="x", pady=5) 
 
-        #d(f"during init. current step: {self.currentStep}\nWorking List element = {workingListHardcoded[self.currentStep]}")
-        #d(f"promptDict call type:\ncurrentStep = {type(self.currentStep)}\n working list element = {type(workingListHardcoded[self.currentStep])}\n\n")
-        #d(f"Dictionary value: {promptDict[workingListHardcoded[self.currentStep]]}\ntype: {type(promptDict[workingListHardcoded[self.currentStep]])}")
-        
         self.nextStepButton = tk.Button(self.root, text="Next Step", command=lambda: self.saveCont(workingListHardcoded[self.currentStep]), padx = 10, pady = 15, borderwidth=5)
         self.nextStepButton.grid(row=4, rowspan=1, column=0, columnspan=3, sticky="nesw", padx=35, pady=35)
         self.root.bind("<Return>", lambda event: self.nextStepButton.invoke())
@@ -207,25 +204,26 @@ class fugenMain:
     def inst(self, message, mood=None):   #instructions. Mood sets the background colour. Note! It does not reset it afterwards
         self.instructions.set(message)
         if mood != None:
-            self.instructions.config(bg=mood)
+            self.instructionsCell.config(bg=mood)
 
     def printListToScroll(self, lst):
+        d(f"Printing to scrollBox:\n{lst}")
         self.inputClear()
         count = 0
         for element in lst:
-            self.prevEntries.insert(tk.END, f"{count}\t- {element} \n")
+            self.prevEntriesList.insert(tk.END, f"{count}\t- {element} \n")
             count += 1
     
-    def inputClear(self, err=None): 
+    def inputClear(self): 
         self.inputField.delete(0, tk.END)
-        if err == None:                             #Not sure if this is valid, but it's worth a try
-            self.instructions.config(bg=self.bgColour)
+        # if err == None:                             #Not sure if this is valid, but it's worth a try
+        #     self.instructions.config(bg=self.bgColour)
 
     def userChoiceRead(self, dictEntry): #reads input, bound-checks integers. Outputs int() for a select value, "", or str() as appropriate. Variable return type!
-        d(f"in userChoiceRead\n dictEntry: {dictEntry}\ndictEntry type = {type(dictEntry)}")
+        #d(f"in userChoiceRead\n dictEntry: {dictEntry}\ndictEntry type = {type(dictEntry)}")
 
         fileName = dictToFileName(dictEntry)
-        d(f"fileName = {fileName}")
+        #d(f"fileName = {fileName}")
         lstLen = len(ftl(fileName))
         userInput = self.inputField.get()
         userInput = userInput.strip()
@@ -235,8 +233,8 @@ class fugenMain:
             if (userInput) <= lstLen:
                 return (userInput-1)
             else:
-                inst("ERROR:\nThe value you entered is not within bounds! \nPlease try again.", self.errColour)
-                inputClear(True) #Passing any value to inputClear() indicates error status, and does not reset the colour in Instructions
+                self.inst("ERROR:\nThe value you entered is not within bounds! \nPlease try again.", self.errColour)
+                self.inputClear() #Passing any value to inputClear() indicates error status, and does not reset the colour in Instructions
                 return False
         elif userInput == "":
             return userInput 
@@ -246,7 +244,8 @@ class fugenMain:
 
     def saveCont(self, dictEntry): #saves a valid choice into memory, steps forward in program execution. Updates prompts         
         global workingList
-        #d(f"in saveCont\n dictEntry: {dictEntry}\ndictEntry type = {type(dictEntry)}")
+        #button command: lambda:    self.saveCont(workingListHardcoded[self.currentStep])
+        
         fileName = dictToFileName(dictEntry)
         choice = self.userChoiceRead(dictEntry)
 
@@ -402,18 +401,18 @@ def ftl(fileName): #extracts file contents into a list
 def dictToFileName(inputKey): #takes a dictionary key as argument
     #d(f"in dictToFileName\n dictEntry: {inputKey}\ndictEntry type = {type(inputKey)}")
     dictEntry = promptDict[inputKey]
-    d("in DictToFileName")
-    d(f"input key: {inputKey}")
-    d(f"dictionary entry = {dictEntry}")
+    # d("in DictToFileName")
+    # d(f"input key: {inputKey}")
+    # d(f"dictionary entry = {dictEntry}")
     
-    if dictEntry[0] == 1: #Since date values are not stored
-        d("\n\nno dateFile found")
-        fileName =  ""
-    elif dictEntry[0] == 8:
+    # if dictEntry[0] == 1: #Since date values are not stored
+    #     d("\n\nno dateFile found")
+    #     fileName =  ""
+    if dictEntry[0] == 8:
         fileName = allFilesList[2]
     else:
         fileName = allFilesList[dictEntry[0]]
-    d(f"returning fileName: {fileName}")
+    #d(f"returning fileName: {fileName}")
     return (fileName)
 
 def intToEntry(fileName, intChoice):
