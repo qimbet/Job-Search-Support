@@ -1,1 +1,12 @@
-John DoeTest
+test 3 - - output reads 'b'
+lost
+lost
+lost
+lost
+sure
+adsg
+dgadaf
+d
+d
+d
+d

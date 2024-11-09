@@ -88,6 +88,7 @@ class fugenMain:
         self.errColour = "#ffad95"
         self.onColour  = "#7ef191"
         self.successColour = "#6BF77D"
+        self.cheerfulYellow = '#ffe918'
         self.defaultButtonColour = "#D9D9D9"
 
         self.root = rootIn
@@ -139,7 +140,7 @@ class fugenMain:
         #3 self.prevEntries = tk.StringVar()
 
         #Output field display labels
-        self.instructionsCell = tk.Label(self.root, textvariable=self.instructions, relief="sunken", bd=2, wraplength=400)
+        self.instructionsCell = tk.Label(self.root, textvariable=self.instructions, relief="sunken", anchor="w", justify="left", bd=2, wraplength=400)
         self.instructionsCell.grid(row=0, column=0, columnspan=2, sticky="nwse", padx=20, pady=(30,10))
 
         self.promptDisplayCell = tk.Label(promptFrame, textvariable=self.promptDisplay)
@@ -161,7 +162,7 @@ class fugenMain:
         self.prevEntriesList.config(yscrollcommand=self.scrollbar.set)
         self.scrollbar.config(command=self.prevEntriesList.yview) 
 
-        self.inst("instructions go here", self.successColour)
+        self.inst("You can press 'enter' instead of clicking the button\n\nPress ctrl+space to close the program\n\nWhen the program is done, you can press ctrl+v to paste the letter directly -- it copies automatically into memory :)", self.successColour)
         self.promptDisplay.set(promptDict[workingListHardcoded[self.currentStep]][2][0]) #currentStep == 0 at program start. Used text for readability
         self.promptDetails.set(promptDict[workingListHardcoded[self.currentStep]][2][1::])
         self.printListToScroll(promptDict[workingListHardcoded[self.currentStep]][1][0::])
@@ -181,8 +182,11 @@ class fugenMain:
         self.nextStepButton = tk.Button(self.root, text="Next Step", command=lambda: self.saveCont(workingListHardcoded[self.currentStep]), padx = 10, pady = 15, borderwidth=5)
         self.nextStepButton.grid(row=4, rowspan=1, column=0, columnspan=3, sticky="nesw", padx=35, pady=35)
         self.root.bind("<Return>", lambda event: self.nextStepButton.invoke())
-       
+        self.root.bind("<Control-space>", self.rootQuit)
         self.root.after(100, self.setFocus())
+
+    def rootQuit(self, event=None):
+        self.root.quit()
 
     def PIPopup(self): #Creates an instance of personalInfoPopup as a child of root
         parentWindow = tk.Toplevel(self.root)
@@ -209,7 +213,7 @@ class fugenMain:
     def printListToScroll(self, lst):
         d(f"Printing to scrollBox:\n{lst}")
         self.inputClear()
-        count = 0
+        count = 1
         for element in lst:
             self.prevEntriesList.insert(tk.END, f"{count}\t- {element} \n")
             count += 1
@@ -219,10 +223,10 @@ class fugenMain:
         # if err == None:                             #Not sure if this is valid, but it's worth a try
         #     self.instructions.config(bg=self.bgColour)
 
-    def userChoiceRead(self, dictEntry): #reads input, bound-checks integers. Outputs int() for a select value, "", or str() as appropriate. Variable return type!
-        #d(f"in userChoiceRead\n dictEntry: {dictEntry}\ndictEntry type = {type(dictEntry)}")
+    def userChoiceRead(self, dictKeyEntry): #reads input, bound-checks integers. Outputs int() for a select value, "", or str() as appropriate. Variable return type!
+        #d(f"in userChoiceRead\n dictKeyEntry: {dictKeyEntry}\ndictKeyEntry type = {type(dictKeyEntry)}")
 
-        fileName = dictToFileName(dictEntry)
+        fileName = dictkeyToFileName(dictKeyEntry)
         #d(f"fileName = {fileName}")
         lstLen = len(ftl(fileName))
         userInput = self.inputField.get()
@@ -231,30 +235,40 @@ class fugenMain:
         if userInput.isdigit():
             userInput = int(userInput)
             if (userInput) <= lstLen:
-                return (userInput-1)
+                d("user input: " + userInput)
+                return str(userInput-1)
             else:
                 self.inst("ERROR:\nThe value you entered is not within bounds! \nPlease try again.", self.errColour)
                 self.inputClear() #Passing any value to inputClear() indicates error status, and does not reset the colour in Instructions
+                d(userInput)
                 return False
         elif userInput == "":
+            d("User input blank!")
             return userInput 
         else: #Custom/new user entry
             fileAppend(fileName, userInput)
             return userInput
 
-    def saveCont(self, dictEntry): #saves a valid choice into memory, steps forward in program execution. Updates prompts         
+    def saveCont(self, dictKeyEntry): #saves a valid choice into memory, steps forward in program execution. Updates prompts         
         global workingList
         #button command: lambda:    self.saveCont(workingListHardcoded[self.currentStep])
+        #the argument passed to saveCont is a dictionary Key, indexed by currentStep
         
-        fileName = dictToFileName(dictEntry)
-        choice = self.userChoiceRead(dictEntry)
+        fileName = dictkeyToFileName(dictKeyEntry)
+        choice = self.userChoiceRead(dictKeyEntry)
+        self.printListToScroll(promptDict[dictKeyEntry][1][0::])
+        #%
 
-        if choice != False: #choice should be str, "", or int. 'False' denotes an error!                        
-            if type(choice)== int:
+        if choice != False: #choice comes as be TYPE=str or "". 'False' denotes an error!                        
+            if type(choice)== int: #%
                 choice = intToEntry(fileName, choice) #converts an integer choice into the desired string
             self.saveInput(choice)
             if (self.currentStep == 8):
+                self.inst("Program done!\n\nYou can paste your letter into your email with ctrl+v :)\n\nPress Enter to reset the program1", self.cheerfulYellow)
                 self.finalize()
+                self.currentStep = self.currentStep + 1
+            elif(self.currentStep == 9):
+                self.currentStep = 0
             else:
                 self.currentStep = self.currentStep + 1
                 self.inst(f"Current step is: {self.currentStep}")
@@ -262,6 +276,7 @@ class fugenMain:
                 
         else: 
             self.inst("Something's wrong! saveCont is receiving a false value from userChoiceRead", self.errColour)
+            saveCont(dictKeyEntry) #recursive until a valid entry is attained
             exit() #%dunno how I feel about including an exit statement here
             
         #%return choice might not be the best approach. This should be the step that stores values and increments currentStep
@@ -270,12 +285,12 @@ class fugenMain:
         global workingList
         workingList[self.currentStep] = userInput
 
-    def showPrompt(self, dictEntry):
-        prompt = dictEntry[2][0]
-        examples = "\n".join(dictEntry[2][1::])
+    def showPrompt(self, dictKey):
+        prompt = promptDict[dictKey][2][0]
+        examples = "\n".join(promptDict[dictKey][2][1::])
 
-        if len(dictEntry) >= 4: #if a substitution list exists in the Dictionary
-            examples = examples.format(tuple(dictEntry[3]))
+        if len(dictKey) >= 4: #if a substitution list exists in the Dictionary
+            examples = examples.format(tuple(dictKey[3]))
 
         self.promptDisplay.set(prompt)
         self.promptDetails.set(examples)
@@ -310,7 +325,6 @@ class fugenMain:
             file.write(fullEmail)
         os.chdir(dataDir)
         workingList = workingListHardcoded
-        self.currentStep = 0
         # fakeList = [self.emailFinal]
         # self.printListToScroll(fakeList)
 
@@ -350,7 +364,6 @@ class personalInfoPopup:
         saveButton = tk.Button(self.popup, text="Save", command=self.saveClose)
         saveButton.grid(row=3, columnspan=2, padx=10, pady=10)
         self.popup.bind("<Return>", self.saveClose)
-
 
     def saveClose(self, event=None):
         self.personalInfo = ["Name", "Email", "Phone Number"]
@@ -398,10 +411,10 @@ def ftl(fileName): #extracts file contents into a list
             allLines.append(line.strip())
         return allLines
 
-def dictToFileName(inputKey): #takes a dictionary key as argument
-    #d(f"in dictToFileName\n dictEntry: {inputKey}\ndictEntry type = {type(inputKey)}")
+def dictkeyToFileName(inputKey): #takes a dictionary key as argument
+    #d(f"in dictkeyToFileName\n dictEntry: {inputKey}\ndictEntry type = {type(inputKey)}")
     dictEntry = promptDict[inputKey]
-    # d("in DictToFileName")
+    # d("in dictkeyToFileName")
     # d(f"input key: {inputKey}")
     # d(f"dictionary entry = {dictEntry}")
     
