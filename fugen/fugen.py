@@ -143,12 +143,12 @@ class fugenMain:
         self.instructionsCell = tk.Label(self.root, textvariable=self.instructions, relief="sunken", anchor="w", justify="left", bd=2, wraplength=400)
         self.instructionsCell.grid(row=0, column=0, columnspan=2, sticky="nwse", padx=20, pady=(30,10))
 
-        self.promptDisplayCell = tk.Label(promptFrame, textvariable=self.promptDisplay)
+        self.promptDisplayCell = tk.Label(promptFrame, textvariable=self.promptDisplay, bg=root.cget("bg"))
         self.promptDisplayCell.grid(row=0, sticky="nsew", padx=100, pady=10)
         boldFont = font.Font(weight="bold")
         self.promptDisplayCell.config(font=boldFont)
 
-        self.promptDetailsCell = tk.Label(promptFrame, textvariable=self.promptDetails)
+        self.promptDetailsCell = tk.Label(promptFrame, textvariable=self.promptDetails, bg=root.cget("bg"))
         self.promptDetailsCell.grid(row=1, sticky="nsew", padx=100, pady=10)
 
         self.root.update_idletasks()  # Update the layout
@@ -374,7 +374,46 @@ class personalInfoPopup:
         
         self.popup.destroy()
         
+class editSettingsPopup:
+    def __init__(self, root):
+        self.popup = root
+        self.popup.title("Personal Info")
+        
+        # Variables to store the input from the text fields
+        self.name = tk.StringVar()
+        self.email = tk.StringVar()
+        self.phoneNumber = tk.StringVar()
 
+        #Input Fields
+        nameLabel = tk.Label(self.popup, text="Full Name:")
+        nameLabel.grid(row=0, column=0, padx=10, pady=5)
+        firstInput = tk.Entry(self.popup, textvariable=self.name)
+        firstInput.grid(row=0, column=1, padx=10, pady=5)
+        firstInput.focus_set()
+
+        emailLabel = tk.Label(self.popup, text="Email:")
+        emailLabel.grid(row=1, column=0, padx=10, pady=5)
+        secondInput = tk.Entry(self.popup, textvariable=self.email)
+        secondInput.grid(row=1, column=1, padx=10, pady=5)
+
+        phoneNumberLabel = tk.Label(self.popup, text="Phone Number:")
+        phoneNumberLabel.grid(row=2, column=0, padx=10, pady=5)
+        thirdInput = tk.Entry(self.popup, textvariable=self.phoneNumber)
+        thirdInput.grid(row=2, column=1, padx=10, pady=5)
+
+            #Save/Close Button
+        saveButton = tk.Button(self.popup, text="Save", command=self.saveClose)
+        saveButton.grid(row=3, columnspan=2, padx=10, pady=10)
+        self.popup.bind("<Return>", self.saveClose)
+
+    def saveClose(self, event=None):
+        self.personalInfo = ["Name", "Email", "Phone Number"]
+        self.personalInfo[0] = self.name.get()
+        self.personalInfo[1] = self.email.get()
+        self.personalInfo[2] = self.phoneNumber.get()
+        writeToFile(footerFile, self.personalInfo)
+        
+        self.popup.destroy()
 
         
 #           *************************************************************************************************************************
@@ -468,8 +507,8 @@ if True:
                                 ftl(identityFile),         
                                 ["What is your academic/professional background?", 
                                 "Please include the appropriate indefinite article:", 
-                                "\t_a_ university student",
-                                "\t_an_ engaged member of my community"]            
+                                "\te.g. _a_ university student",
+                                "\t_an_ engaged member of my community"]             
                             ],
 
         "Skills":           [4,
