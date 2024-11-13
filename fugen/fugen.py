@@ -2,10 +2,12 @@
 #This is a follow-up message writer for job applications, mad-libs style. 
 
 #Current bugs: 
-#printListToScroll is one iteration ahead
+#printListToScroll is one iteration ahead. printListToScroll does not clear with each call
 #inst.set(mood) does not reset. Every successful step forward should include a: "if mood!=default; mood=default"
 #Inputting an integer for a selection breaks the program
 #Program does not loop
+
+#Currently midway through debugging printListToScroll asynchronicity. Nudging at self.currentStep
 
 
 import os 
@@ -89,7 +91,7 @@ for element in allFilesList:
 #           *************************************************************************************************************************
 class fugenMain:
     def __init__(self, rootIn):
-        self.currentStep = 0
+        self.currentStep = 1
         self.emailFinal = ""
 
         #Colours
@@ -178,7 +180,7 @@ class fugenMain:
         firstPrevEntries = promptDict[workingListHardcoded[self.currentStep]][1][0::]
         
         self.inst("You can press 'enter' instead of clicking the button\n\nPress ctrl+space to close the program\n\nWhen the program is done, you can press ctrl+v to paste the letter directly -- it copies automatically into memory :)", self.successColour)
-        self.promptDisplay.set(firstPrompt) #currentStep == 0 at program start. Used text for readability
+        self.promptDisplay.set(firstPrompt) #currentStep == 0 at program start
         self.promptDetails.set(firstDetails)
         self.printListToScroll(firstPrevEntries)
         
@@ -234,6 +236,7 @@ class fugenMain:
 
     def printListToScroll(self, lst):
         d(f"Printing to scrollBox:\n{lst}")
+        self.prevEntriesList.delete(0, tk.END)
         self.inputClear()
         count = 1
         for element in lst:
@@ -292,9 +295,15 @@ class fugenMain:
         #button command: lambda:    self.saveCont(workingListHardcoded[self.currentStep])
         #the argument passed to saveCont is a dictionary Key, indexed by currentStep
         
+        dictKeyForPrintScroll = int((promptDict[dictKeyEntry][0]))-1
+        dictKeyForPrintScroll = workingListHardcoded[dictKeyForPrintScroll] #steps backwards. This is a hard workaround for a silly bug
+
         fileName = dictkeyToFileName(dictKeyEntry)
         choice = self.userChoiceRead(dictKeyEntry)
-        self.printListToScroll(promptDict[dictKeyEntry][1][0::])
+        self.printListToScroll(promptDict[dictKeyForPrintScroll][1][0::])
+        d(f"printing new scrollList: for entry {dictKeyForPrintScroll}")
+        d(f"current dictKey: {dictKeyEntry}")
+        d(f"current step: {self.currentStep}")
         #%
 
         if choice != False: #choice comes as be TYPE=str or "". 'False' denotes an error!                        
@@ -312,7 +321,7 @@ class fugenMain:
                 self.inst(f"Current step is: {self.currentStep}")
                 self.showPrompt(workingListHardcoded[self.currentStep])
                 
-        else: 
+        else: #error: bad input
             self.inst("Something's wrong! saveCont is receiving a false value from userChoiceRead", self.errColour)
             saveCont(dictKeyEntry) #recursive until a valid entry is attained
             exit() #%dunno how I feel about including an exit statement here
