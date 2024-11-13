@@ -172,7 +172,7 @@ class fugenMain:
 
         #Button definitions
         self.infoEditButton = tk.Button(buttonFrame, text="Edit Personal Information", command=self.PIPopup, padx = 5, pady = 5)
-        self.programEditButton = tk.Button(buttonFrame, text="Edit Program Settings", command=self.programSettingsInput, padx = 5, pady = 5)
+        self.programEditButton = tk.Button(buttonFrame, text="Edit Program Settings", command=self.editSettingsPopup, padx = 5, pady = 5)
         self.setOnTopButton = tk.Checkbutton(buttonFrame, text="Fix Window on screen", command=self.changePin, padx = 5, pady = 5, variable=self.pinWindow, onvalue=True, offvalue=False)
 
         self.infoEditButton.pack(side="top", fill="x", pady=5) 
@@ -192,6 +192,10 @@ class fugenMain:
         parentWindow = tk.Toplevel(self.root)
         personalInfoPopup(parentWindow)
         self.footer = makeFooter(footerFile)
+
+    def editSettingsPopup(self):
+        parentWindow = tk.Toplevel(self.root)
+        editSettingsPopup(parentWindow)
 
     def changePin(self, event=None):
         buttonStatus=self.pinWindow.get()
@@ -328,11 +332,6 @@ class fugenMain:
         # fakeList = [self.emailFinal]
         # self.printListToScroll(fakeList)
 
-    def programSettingsInput(self):     #%NOT DONE!
-        #add, remove, edit entries from lists
-        #change backgrounds?
-        pass
-
 class personalInfoPopup:
     def __init__(self, root):
         self.popup = root
@@ -377,42 +376,17 @@ class personalInfoPopup:
 class editSettingsPopup:
     def __init__(self, root):
         self.popup = root
-        self.popup.title("Personal Info")
-        
-        # Variables to store the input from the text fields
-        self.name = tk.StringVar()
-        self.email = tk.StringVar()
-        self.phoneNumber = tk.StringVar()
+        self.popup.title("Edit Program Info")
+        #self.popup.geometry('500x400')
 
-        #Input Fields
-        nameLabel = tk.Label(self.popup, text="Full Name:")
-        nameLabel.grid(row=0, column=0, padx=10, pady=5)
-        firstInput = tk.Entry(self.popup, textvariable=self.name)
-        firstInput.grid(row=0, column=1, padx=10, pady=5)
-        firstInput.focus_set()
+        self.outputField = tk.Label(self.popup, wraplength=400, text="This could be a place where you could edit, add, and remove your previous entries. However, that's more work than I currently have capacity for, so you have to do it manually.\n\nRight click on the icon you use to open the program (or look it up using your file search), and click 'Open File Location'\nOpen the 'Data' folder. Each .txt file is the list of entries for a given prompt. Click around and explore for a bit. Add, edit, or remove lines as best fits what you use.\n\nYou can press 'enter' to close this window.")
+        self.outputField.grid(row=0, column=0, columnspan=3, padx=(20, 25), pady=20)
 
-        emailLabel = tk.Label(self.popup, text="Email:")
-        emailLabel.grid(row=1, column=0, padx=10, pady=5)
-        secondInput = tk.Entry(self.popup, textvariable=self.email)
-        secondInput.grid(row=1, column=1, padx=10, pady=5)
-
-        phoneNumberLabel = tk.Label(self.popup, text="Phone Number:")
-        phoneNumberLabel.grid(row=2, column=0, padx=10, pady=5)
-        thirdInput = tk.Entry(self.popup, textvariable=self.phoneNumber)
-        thirdInput.grid(row=2, column=1, padx=10, pady=5)
-
-            #Save/Close Button
-        saveButton = tk.Button(self.popup, text="Save", command=self.saveClose)
-        saveButton.grid(row=3, columnspan=2, padx=10, pady=10)
+        self.closeButton = tk.Button(self.popup, text="Continue", command=self.saveClose)
+        self.closeButton.grid(row=1, column=0, columnspan=3, padx=10, pady=(15, 30))
         self.popup.bind("<Return>", self.saveClose)
 
-    def saveClose(self, event=None):
-        self.personalInfo = ["Name", "Email", "Phone Number"]
-        self.personalInfo[0] = self.name.get()
-        self.personalInfo[1] = self.email.get()
-        self.personalInfo[2] = self.phoneNumber.get()
-        writeToFile(footerFile, self.personalInfo)
-        
+    def saveClose(self, event=None):        
         self.popup.destroy()
 
         
