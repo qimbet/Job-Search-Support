@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 #This is a follow-up message writer for job applications, mad-libs style. 
 
+#Current bugs: 
+#printListToScroll is one iteration ahead
+#inst.set(mood) does not reset. Every successful step forward should include a: "if mood!=default; mood=default"
+#Inputting an integer for a selection breaks the program
+#Program does not loop
+
+
 import os 
 import datetime as dt
 import pyperclip as pp
@@ -36,10 +43,12 @@ dataFolder = "Data"
 
 
 
-workingListHardcoded = ["Hiring Manager", "Dates", "Jobs", "Identity", "Skills", "Industries", "Companies", "Values", "Titles"] #Used only to reset workingList at the end of the loop
+
 workingList = ["Hiring Manager", "Dates", "Jobs", "Identity", "Skills", "Industries", "Companies", "Values", "Titles"]
 #                   0               1       2          3          4           5            6           7        8
 
+
+workingListHardcoded = workingList #This list is reference. Used for a 'reset' button on workingList
 allFilesList = [hiringManagerFile, footerFile, jobFile, identityFile, skillsFile, industriesFile, companiesFile, valuesFile, dateFile]
 #                   0                  1          2           3           4             5                6           7      
 
@@ -162,10 +171,16 @@ class fugenMain:
         self.prevEntriesList.config(yscrollcommand=self.scrollbar.set)
         self.scrollbar.config(command=self.prevEntriesList.yview) 
 
+
+        #Sets initialization values in prompt boxes
+        firstPrompt = promptDict[workingListHardcoded[self.currentStep]][2][0]
+        firstDetails = listToNewlineString(promptDict[workingListHardcoded[self.currentStep]][2][1::])
+        firstPrevEntries = promptDict[workingListHardcoded[self.currentStep]][1][0::]
+        
         self.inst("You can press 'enter' instead of clicking the button\n\nPress ctrl+space to close the program\n\nWhen the program is done, you can press ctrl+v to paste the letter directly -- it copies automatically into memory :)", self.successColour)
-        self.promptDisplay.set(promptDict[workingListHardcoded[self.currentStep]][2][0]) #currentStep == 0 at program start. Used text for readability
-        self.promptDetails.set(promptDict[workingListHardcoded[self.currentStep]][2][1::])
-        self.printListToScroll(promptDict[workingListHardcoded[self.currentStep]][1][0::])
+        self.promptDisplay.set(firstPrompt) #currentStep == 0 at program start. Used text for readability
+        self.promptDetails.set(firstDetails)
+        self.printListToScroll(firstPrevEntries)
         
         #Window-state Variables
         self.pinWindow = tk.BooleanVar()
@@ -185,17 +200,9 @@ class fugenMain:
         self.root.bind("<Control-space>", self.rootQuit)
         self.root.after(100, self.setFocus())
 
+    #Window management functions
     def rootQuit(self, event=None):
         self.root.quit()
-
-    def PIPopup(self): #Creates an instance of personalInfoPopup as a child of root
-        parentWindow = tk.Toplevel(self.root)
-        personalInfoPopup(parentWindow)
-        self.footer = makeFooter(footerFile)
-
-    def editSettingsPopup(self):
-        parentWindow = tk.Toplevel(self.root)
-        editSettingsPopup(parentWindow)
 
     def changePin(self, event=None):
         buttonStatus=self.pinWindow.get()
@@ -209,6 +216,17 @@ class fugenMain:
     def setFocus(self):
         self.inputField.focus_force()
 
+    #Popups
+    def PIPopup(self): #Creates an instance of personalInfoPopup as a child of root
+        parentWindow = tk.Toplevel(self.root)
+        personalInfoPopup(parentWindow)
+        self.footer = makeFooter(footerFile)
+
+    def editSettingsPopup(self):
+        parentWindow = tk.Toplevel(self.root)
+        editSettingsPopup(parentWindow)
+
+    #Display Printing
     def inst(self, message, mood=None):   #instructions. Mood sets the background colour. Note! It does not reset it afterwards
         self.instructions.set(message)
         if mood != None:
@@ -222,6 +240,17 @@ class fugenMain:
             self.prevEntriesList.insert(tk.END, f"{count}\t- {element} \n")
             count += 1
     
+    def showPrompt(self, dictKey):
+        prompt = promptDict[dictKey][2][0]
+        examples = "\n".join(promptDict[dictKey][2][1::])
+
+        if len(dictKey) >= 4: #if a substitution list exists in the Dictionary
+            examples = examples.format(tuple(dictKey[3]))
+
+        self.promptDisplay.set(prompt)
+        self.promptDetails.set(examples)
+
+    #Input Handling
     def inputClear(self): 
         self.inputField.delete(0, tk.END)
         # if err == None:                             #Not sure if this is valid, but it's worth a try
@@ -253,6 +282,11 @@ class fugenMain:
             fileAppend(fileName, userInput)
             return userInput
 
+    def saveInput(self, userInput):
+        global workingList
+        workingList[self.currentStep] = userInput
+
+    #Program Flow
     def saveCont(self, dictKeyEntry): #saves a valid choice into memory, steps forward in program execution. Updates prompts         
         global workingList
         #button command: lambda:    self.saveCont(workingListHardcoded[self.currentStep])
@@ -285,20 +319,6 @@ class fugenMain:
             
         #%return choice might not be the best approach. This should be the step that stores values and increments currentStep
     
-    def saveInput(self, userInput):
-        global workingList
-        workingList[self.currentStep] = userInput
-
-    def showPrompt(self, dictKey):
-        prompt = promptDict[dictKey][2][0]
-        examples = "\n".join(promptDict[dictKey][2][1::])
-
-        if len(dictKey) >= 4: #if a substitution list exists in the Dictionary
-            examples = examples.format(tuple(dictKey[3]))
-
-        self.promptDisplay.set(prompt)
-        self.promptDetails.set(examples)
-
     def finalize(self):
         self.buildLetter()
         self.copyMail()
@@ -446,6 +466,12 @@ def intToEntry(fileName, intChoice):
     choice = intChoice
     return fileList[choice]
 
+def listToNewlineString(lst):
+    z = ""
+    for element in lst:
+        z = z+element+"\n"
+    z = z[0:-1]
+    return z
 
 #           *************************************************************************************************************************
 
@@ -460,7 +486,8 @@ if True:
     #   [index, [previous entries], ["prompt", *"examples"], [*substitutionsForPrompts] ]
 
     promptDict = {
-        "Hiring Manager":   [0,
+        "Hiring Manager":   
+                            [0,
                                 ftl(hiringManagerFile),    
                                 ["What is the hiring manager's name?", 
                                 "If you don't know, leave this section blank and press enter."]     
