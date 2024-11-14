@@ -91,7 +91,7 @@ for element in allFilesList:
 #           *************************************************************************************************************************
 class fugenMain:
     def __init__(self, rootIn):
-        self.currentStep = 1
+        self.currentStep = 0
         self.emailFinal = ""
 
         #Colours
@@ -177,7 +177,7 @@ class fugenMain:
         #Sets initialization values in prompt boxes
         firstPrompt = promptDict[workingListHardcoded[self.currentStep]][2][0]
         firstDetails = listToNewlineString(promptDict[workingListHardcoded[self.currentStep]][2][1::])
-        firstPrevEntries = promptDict[workingListHardcoded[self.currentStep]][1][0::]
+        firstPrevEntries = promptDict[workingListHardcoded[self.currentStep]][1][1::]
         
         self.inst("You can press 'enter' instead of clicking the button\n\nPress ctrl+space to close the program\n\nWhen the program is done, you can press ctrl+v to paste the letter directly -- it copies automatically into memory :)", self.successColour)
         self.promptDisplay.set(firstPrompt) #currentStep == 0 at program start
@@ -295,12 +295,15 @@ class fugenMain:
         #button command: lambda:    self.saveCont(workingListHardcoded[self.currentStep])
         #the argument passed to saveCont is a dictionary Key, indexed by currentStep
         
-        dictKeyForPrintScroll = int((promptDict[dictKeyEntry][0]))-1
-        dictKeyForPrintScroll = workingListHardcoded[dictKeyForPrintScroll] #steps backwards. This is a hard workaround for a silly bug
+        if self.currentStep!=0:
+            dictKeyForPrintScroll = int((promptDict[dictKeyEntry][0]))-1
+            dictKeyForPrintScroll = workingListHardcoded[dictKeyForPrintScroll] #steps backwards. This is a hard workaround for a silly bug
+        else:
+            dictKeyForPrintScroll = dictKeyEntry
 
         fileName = dictkeyToFileName(dictKeyEntry)
         choice = self.userChoiceRead(dictKeyEntry)
-        self.printListToScroll(promptDict[dictKeyForPrintScroll][1][0::])
+        self.printListToScroll(promptDict[dictKeyForPrintScroll][1][1::])
         d(f"printing new scrollList: for entry {dictKeyForPrintScroll}")
         d(f"current dictKey: {dictKeyEntry}")
         d(f"current step: {self.currentStep}")
@@ -333,7 +336,6 @@ class fugenMain:
         self.copyMail()
         
     def buildLetter(self):
-        self.emailFinal
         def messageBody():
             body = """Hi{},
         
@@ -347,19 +349,17 @@ class fugenMain:
 
         Looking forward to hearing from you! """
             return body
+
         emailBody = messageBody()
         self.emailFinal = (emailBody.format(*workingList)) + "\n\n" + self.footer
 
     def copyMail(self): #saves letter, copies it, and resets program to start
         pp.copy(self.emailFinal)
-        inst("Follow-up email generated!\nIt's been copied into your computer's memory.\nPress ctrl+v / cmd+v to paste it :)", self.successColour)
         os.chdir(archiveDir)
         with open(f"Reply - {workingList[2]} - {workingList[6]}.txt", "w") as file:
-            file.write(fullEmail)
+            file.write(self.emailFinal)
         os.chdir(dataDir)
         workingList = workingListHardcoded
-        # fakeList = [self.emailFinal]
-        # self.printListToScroll(fakeList)
 
 class personalInfoPopup:
     def __init__(self, root):
@@ -505,7 +505,7 @@ if True:
         "Dates":            [1,   
                                 dates,                     
                                 ["When did you apply?", 
-                                "The dates given here are 10 and 7 days ago, for convenience."]             
+                                "The dates given here are 10 and 7 days ago, for convenience. Feel free to add your own."]             
                             ],
 
         "Jobs":             [2,
