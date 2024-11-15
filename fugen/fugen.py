@@ -52,11 +52,11 @@ dataFolder = "Data"
 
 
 
-workingList = ["Hiring Manager", "Dates", "Jobs", "Identity", "Skills", "Industries", "Companies", "Values", "Titles"]
-#                   0               1       2          3          4           5            6           7        8
+workingListHardcoded = ["Hiring Manager", "Dates", "Jobs", "Identity", "Skills", "Industries", "Companies", "Values", "Titles"]
+#                            0               1       2          3          4           5            6           7        8
 
 
-workingListHardcoded = workingList #This list is reference. Used for a 'reset' button on workingList
+workingList = workingListHardcoded #This list is reference. Used for a 'reset' button on workingList
 allFilesList = [hiringManagerFile, footerFile, jobFile, identityFile, skillsFile, industriesFile, companiesFile, valuesFile, dateFile]
 #                   0                  1          2           3           4             5                6           7      
 
@@ -241,7 +241,7 @@ class fugenMain:
             self.instructionsCell.config(bg=mood)
 
     def printListToScroll(self, lst):
-        d(f"\nIn printListScroll. Current step is: {self.currentStep}")
+        d(f"\nPrintListScroll: Current step is: {self.currentStep}")
         # d(f"Printing to scrollBox:\n{lst}")
         d(f"Printing for step {self.currentStep}, which matches dictionary key {workingListHardcoded[self.currentStep]}\n")
         self.prevEntriesList.delete(0, tk.END)
@@ -275,7 +275,7 @@ class fugenMain:
         lstLen = len(ftl(fileName))
         userInput = self.inputField.get()
         userInput = userInput.strip()
-        d(f"Reading value: '{userInput}' from userChoiceRead! This is of the type {type(userInput)}\n")
+        d(f"UserChoiceRead: Reading value: '{userInput}' from userChoiceRead! This is of the type {type(userInput)}\n")
 
         #self.currentStep = self.currentStep + 1
 
@@ -283,7 +283,7 @@ class fugenMain:
             userInput = int(userInput)
             if (userInput) <= lstLen:
                 # d("user input: " + userInput)
-                d(f"Integer input recognized! returning string value of {userInput - 1}")
+                d(f"UserChoiceRead: Integer input recognized! returning string value of {userInput - 1}")
                 return (userInput-1)
             else:
                 self.inst("ERROR:\nThe value you entered is not within bounds! \nPlease try again.", self.errColour)
@@ -305,19 +305,19 @@ class fugenMain:
     #Program Flow
     def saveCont(self, dictKeyEntry): #saves a valid choice into memory, steps forward in program execution. Updates prompts         
         global workingList
-        self.currentStep = self.currentStep + 1
+
         #button command: lambda:    self.saveCont(workingListHardcoded[self.currentStep])
         #the argument passed to saveCont is a dictionary Key, indexed by currentStep
         
         if self.currentStep!=0:
-            d(f"savecont - standard")
+            # d(f"savecont - standard")
             dictKeyForPrintScroll = int((promptDict[dictKeyEntry][0])) #@-1
             dictKeyForPrintScroll = workingListHardcoded[dictKeyForPrintScroll] #steps backwards. This is a hard workaround for a silly bug
         else:
             d("savecont -- current Step == 0")
             dictKeyForPrintScroll = int((promptDict[dictKeyEntry][0]))+1
             dictKeyForPrintScroll = workingListHardcoded[dictKeyForPrintScroll]
-        d(f"in SaveCont: key for dictScroll: {dictKeyForPrintScroll}")
+        d(f"in SaveCont, step {self.currentStep}: key for dictScroll: {dictKeyForPrintScroll}")
 
         fileName = dictkeyToFileName(dictKeyEntry)
         choice = self.userChoiceRead(dictKeyEntry)
@@ -331,14 +331,18 @@ class fugenMain:
             if type(choice)== int: #%
                 choice = intToEntry(fileName, choice) #converts an integer choice into the desired string
             self.saveInput(choice)
+            d(f"saveCont: userChoice saved -- selected value: {choice}")
+            self.currentStep = self.currentStep + 1
+            d(f"saveCont: incrementing currentStep. step #: {self.currentStep}")
             
             if (self.currentStep == 8):
                 self.inst("Program done!\n\nYou can paste your letter into your email with ctrl+v :)\n\nPress Enter to reset the program1", self.cheerfulYellow)
                 self.finalize()
                 self.currentStep = 0
             else:
-                # self.currentStep = self.currentStep + 1
-                self.inst(f"Current step is: {self.currentStep}")
+                self.currentStep = self.currentStep + 1
+                d(f"saveCont: incrementing currentStep. step #: {self.currentStep}")
+                d(f"About to send the value {workingListHardcoded[self.currentStep]} as an argument to showPrompt()")
                 self.showPrompt(workingListHardcoded[self.currentStep]) #@
                 
             d(f"input saved -- current step updated to {self.currentStep}")
